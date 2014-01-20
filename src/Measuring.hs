@@ -1,31 +1,24 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances #-}
+
 module Measuring where
 
 
 import Data.FingerTree
 import Data.Monoid
 
-data List a = Empty | Head a (List a)
-    deriving Show
+type Parser a = [a] -- for now
 
-concatenate :: List a -> List a -> List a
-concatenate Empty l2 = l2
-concatenate l1 Empty = l1
-concatenate (Head a Empty) l2 = Head a l2
-concatenate (Head a l1) l2 = Head a (concatenate l1 l2)
+{-
+instance Monoid (Parser a) where
+    mempty = []
+    mappend = (++)
+-}
 
-list1 = Head "hej" $ Head "på" $ Head "dig" Empty
-list2 = Head "hur" $ Head "mår" $ Head "du" Empty
-
-instance Monoid (List a) where
-    mempty = Empty
-    mappend = concatenate
-
--- Additive monoid
-instance Monoid Int where
-    mempty = 1
-    mappend = (+)
-
-instance Measured Int (List a) where
-    measure Empty      = 1
-    measure (Head _ t) = 1 + measure t
+instance Measured (Parser a) (FingerTree v a) where
+    measure tree = toList $ viewl tree
+      where
+        toList = undefined 
+        {-
+        toList EmptyL     = []
+        toList (a :< seq) = a : toList $ viewl seq
+        -}

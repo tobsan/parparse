@@ -1,0 +1,34 @@
+Log of progress, meetings etc
+=============================
+
+Supervision 2014-01-14
+======================
+
+* Discussions about setup of repo, supervision, expectations etc
+    - Supervision mondays
+    - Approx 2 months work, 2 months report writing
+    - Midway report around easter
+
+* Guidelines for the report
+    - Should be readable by other MSc students
+    - Should contain everything interesting/non-obvious
+
+* Things to think about in the actual project
+    - How to handle wrong input
+        - And how to know what part is bad?
+        - Overlaps in matrix - decision needed!
+    - How to combine lexer and parser neatly w/ Monoid & Measure
+        - This is the first large challenge!
+        - Once done - test it as simple as possible.
+
+* Where to find code?
+    - BNFC
+    - LexGen
+    - Yi
+
+Project start 2014-01-13 - 14
+========================
+* Reading paper by Valiant
+* Reading paper by Claessen & Bernardy
+* Walkthrough of LexGen by Kristofer
+
