@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
 
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
 module Java where
@@ -18,9 +19,8 @@ import Array
 import Char (ord)
 #endif
 import Prelude hiding (foldl,foldr,null)
-import Data.FingerTree (FingerTree,Measured,measure,split,fromList)
-import Data.Sequence as SS hiding (fromList)
-import qualified Data.Sequence as S (fromList)
+import Data.FingerTree -- (FingerTree,Measured,measure,split,fromList)
+import qualified Data.Sequence as S 
 import Data.Foldable (foldl,foldr,toList)
 import Data.Monoid
 
@@ -28,8 +28,9 @@ import Data.Monoid
 import Data.Word
 import Data.Bits
 
+lexCode :: Monoid v => String -> LexTree v 
 lexCode = makeTree
-tokens = treeToTokens
+-- tokens = treeToTokens
 
 alex_base :: Array Int Int
 alex_base = listArray (0,90) [-8,77,291,-109,-32,-31,419,-96,-95,-104,45,547,-85,78,292,-94,315,-91,803,739,0,852,1108,1202,1127,1383,1319,1575,1198,1661,0,1513,115,140,1917,1918,350,1221,2065,-87,2168,2104,0,2350,0,2564,141,139,79,75,-45,60,-44,-42,-72,0,-38,2319,312,-81,-48,0,0,2329,-52,11,0,0,2561,2774,-20,47,0,0,2571,2784,2817,0,0,0,0,2861,2960,3059,3158,3257,0,3334,3372,3405,3415]
@@ -43,36 +44,37 @@ alex_check = listArray (0,3670) [-1,9,10,11,12,13,115,39,39,105,105,115,97,104,1
 alex_deflt :: Array Int Int
 alex_deflt = listArray (0,90) [-1,29,29,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,29,29,30,30,34,-1,34,5,5,-1,-1,29,42,42,-1,-1,-1,-1,-1,-1,-1,-1,43,43,43,43,-1,29,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1]
 
+alex_accept :: Array Int [AlexAcc (Posn -> S.Seq Char -> Token) user]
 alex_accept = listArray (0::Int,90) [[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[(AlexAccSkip)],[(AlexAccSkip)],[(AlexAccSkip)],[(AlexAccSkip)],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_3))],[(AlexAcc (alex_action_4))],[(AlexAcc (alex_action_4))],[(AlexAcc (alex_action_5))],[(AlexAcc (alex_action_6))],[(AlexAcc (alex_action_7))],[(AlexAcc (alex_action_8))],[(AlexAcc (alex_action_8))],[(AlexAcc (alex_action_9))],[(AlexAcc (alex_action_10))],[(AlexAcc (alex_action_11))],[(AlexAcc (alex_action_11))],[(AlexAcc (alex_action_12))],[(AlexAcc (alex_action_12))],[(AlexAcc (alex_action_13))],[(AlexAcc (alex_action_14))],[(AlexAcc (alex_action_15))],[(AlexAcc (alex_action_15))],[(AlexAcc (alex_action_15))],[(AlexAcc (alex_action_16))],[(AlexAcc (alex_action_17))],[(AlexAcc (alex_action_18))],[(AlexAcc (alex_action_19))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_20))],[(AlexAcc (alex_action_21))],[(AlexAcc (alex_action_22))],[(AlexAcc (alex_action_22))],[(AlexAcc (alex_action_23))],[(AlexAcc (alex_action_23))]]
 
 tok f p s = f p s
 
---share :: Seq Char -> Seq Char
+--share :: S.Seq Char -> S.Seq Char
 share = id
 
 data Tok =
-   TS !(Seq Char)     -- reserved words and symbols
- | TL !(Seq Char)     -- string literals
- | TI !(Seq Char)     -- integer literals
- | TV !(Seq Char)     -- identifiers
- | TD !(Seq Char)     -- double precision float literals
- | TC !(Seq Char)     -- character literals
- | T_Unsigned !(Seq Char)
- | T_Long !(Seq Char)
- | T_UnsignedLong !(Seq Char)
- | T_Hexadecimal !(Seq Char)
- | T_HexUnsigned !(Seq Char)
- | T_HexLong !(Seq Char)
- | T_HexUnsLong !(Seq Char)
- | T_Octal !(Seq Char)
- | T_OctalUnsigned !(Seq Char)
- | T_OctalLong !(Seq Char)
- | T_OctalUnsLong !(Seq Char)
- | T_JDouble !(Seq Char)
- | T_JFloat !(Seq Char)
- | T_JLongDouble !(Seq Char)
- | T_UnicodeChar !(Seq Char)
- | T_JChar !(Seq Char)
+   TS !(S.Seq Char)     -- reserved words and symbols
+ | TL !(S.Seq Char)     -- string literals
+ | TI !(S.Seq Char)     -- integer literals
+ | TV !(S.Seq Char)     -- identifiers
+ | TD !(S.Seq Char)     -- double precision float literals
+ | TC !(S.Seq Char)     -- character literals
+ | T_Unsigned !(S.Seq Char)
+ | T_Long !(S.Seq Char)
+ | T_UnsignedLong !(S.Seq Char)
+ | T_Hexadecimal !(S.Seq Char)
+ | T_HexUnsigned !(S.Seq Char)
+ | T_HexLong !(S.Seq Char)
+ | T_HexUnsLong !(S.Seq Char)
+ | T_Octal !(S.Seq Char)
+ | T_OctalUnsigned !(S.Seq Char)
+ | T_OctalLong !(S.Seq Char)
+ | T_OctalUnsLong !(S.Seq Char)
+ | T_JDouble !(S.Seq Char)
+ | T_JFloat !(S.Seq Char)
+ | T_JLongDouble !(S.Seq Char)
+ | T_UnicodeChar !(S.Seq Char)
+ | T_JChar !(S.Seq Char)
  deriving (Eq,Show,Ord)
 
 data Token = 
@@ -116,9 +118,9 @@ prToken t = case t of
 
 --  _ -> S.fromList $ show t
 
-data BTree = N | B (Seq Char) Tok BTree BTree deriving (Show)
+data BTree = N | B (S.Seq Char) Tok BTree BTree deriving (Show)
 
-eitherResIdent :: (Seq Char -> Tok) -> Seq Char -> Tok
+eitherResIdent :: (S.Seq Char -> Tok) -> S.Seq Char -> Tok
 eitherResIdent tv s = treeFind resWords
   where
   treeFind N = tv s
@@ -129,14 +131,14 @@ eitherResIdent tv s = treeFind resWords
 resWords = b "int" (b "double" (b "catch" (b "break" (b "boolean" (b "abstract" N N) N) (b "case" (b "byte" N N) N)) (b "continue" (b "class" (b "char" N N) N) (b "do" (b "default" N N) N))) (b "float" (b "false" (b "extends" (b "else" N N) N) (b "finally" (b "final" N N) N)) (b "implements" (b "if" (b "for" N N) N) (b "instanceof" (b "import" N N) N)))) (b "static" (b "package" (b "native" (b "long" (b "interface" N N) N) (b "null" (b "new" N N) N)) (b "public" (b "protected" (b "private" N N) N) (b "short" (b "return" N N) N))) (b "throws" (b "synchronized" (b "switch" (b "super" N N) N) (b "throw" (b "this" N N) N)) (b "try" (b "true" (b "transient" N N) N) (b "while" (b "volatile" N N) N))))
    where b s = B (S.fromList s) (TS (S.fromList s))
 
-unescapeInitTail :: Seq Char -> Seq Char
+unescapeInitTail :: S.Seq Char -> S.Seq Char
 unescapeInitTail = unesc . tail . toList where
   unesc s = case s of
-    '\\':c:cs | elem c ['\"', '\\', '\''] -> singleton c <> unesc cs
-    '\\':'n':cs  -> singleton '\n' <> unesc cs
-    '\\':'t':cs  -> singleton '\t' <> unesc cs
+    '\\':c:cs | elem c ['\"', '\\', '\''] -> S.singleton c <> unesc cs
+    '\\':'n':cs  -> S.singleton '\n' <> unesc cs
+    '\\':'t':cs  -> S.singleton '\t' <> unesc cs
     '"':[]    -> mempty
-    c:cs      -> singleton c <> unesc cs
+    c:cs      -> S.singleton c <> unesc cs
     _         -> mempty
 
 -------------------------------------------------------------------
@@ -145,12 +147,12 @@ unescapeInitTail = unesc . tail . toList where
 -------------------------------------------------------------------
 -- Generic template
 type State = Int
-type Transition = State -> Tokens -- Transition from in state to Tokens
+type Transition v = State -> (Tokens v) -- Transition from in state to Tokens
 -- Wrapper template?
-data Tokens    = NoTokens
-               | InvalidTokens !(Seq Char)
-               | Tokens { currentSeq :: !(Seq IntToken)
-                        , lastToken  :: !Suffix
+data Tokens v = NoTokens
+              | InvalidTokens !(S.Seq Char)
+              | Tokens { currentSeq :: !(FingerTree v IntToken) -- (S.Seq IntToken)
+                        , lastToken  :: !(Suffix v)
 --                        , lastChar   :: !Char
                         , outState   :: !State}
 -- The suffix is the the sequence of as long as possible accepting tokens.
@@ -158,18 +160,18 @@ data Tokens    = NoTokens
                  deriving Show
 --This is either a Sequence of tokens or one token if the it hits an accepting state with later characters
 -- Generic template
-data Suffix   = Str !(Seq Char)
+data Suffix v = Str !(S.Seq Char)
               | One !IntToken
-              | Multi !Tokens
+              | Multi !(Tokens v)
                  deriving Show
 type Size     = Sum Int
 --Wrapper
-type LexTree  = FingerTree (Table State Tokens,Size) Char
-data IntToken = Token { lexeme   :: !(Seq Char)
+type LexTree v = FingerTree (Table State (Tokens v),Size) Char
+data IntToken  = Token { lexeme   :: !(S.Seq Char)
 --                      , prev     :: Char
                       , token_id :: Accepts}
 --Wrapper template
-type Accepts   = [AlexAcc (Posn -> Seq Char -> Token) ()]
+type Accepts   = [AlexAcc (Posn -> S.Seq Char -> Token) ()]
 
 tabulate :: (State,State) -> (State -> b) -> Table State b
 access :: Table State b -> (State -> b)
@@ -193,16 +195,16 @@ instance Show IntToken where
             AlexAccSkip -> "Skip:" ++ show (lexeme token)
 
 -- Generic template
-instance Monoid (Table State Tokens) where
+instance Monoid v => Monoid (Table State (Tokens v)) where
   mempty = tabulate stateRange (\_ -> emptyTokens)
   f `mappend` g = tabulate stateRange $ combineTokens (access f) (access g)
 
 -- Wrapper template
 -- The base case for when one character is lexed.
-instance Measured (Table State Tokens,Size) Char where
+instance Monoid v => Measured (Table State (Tokens v),Size) Char where
   measure c =
     let bytes = encode c
-        cSeq = singleton c
+        cSeq = S.singleton c
         baseCase in_state | in_state == -1 = InvalidTokens cSeq
                           | otherwise = case foldl automata in_state bytes of
           -1 -> InvalidTokens cSeq
@@ -211,27 +213,31 @@ instance Measured (Table State Tokens,Size) Char where
             acc -> Tokens empty (One (createToken cSeq acc)) os
     in (tabulate stateRange $ baseCase, Sum 1)
 
-createToken :: (Seq Char) -> Accepts -> IntToken
+-- This is where the sigma function should end up
+instance Monoid v => Measured v IntToken where
+    measure tok = undefined
+
+createToken :: S.Seq Char -> Accepts -> IntToken
 createToken lex acc = Token lex acc
 
-createTokens :: Seq IntToken -> Suffix -> State -> Tokens
+createTokens :: Measured v IntToken => FingerTree v IntToken -> Suffix v -> State -> Tokens v
 createTokens seq suf state = if null seq
                              then NoTokens
                              else Tokens seq suf state
 
 -- Wrapper template
-invalidTokens :: (Seq Char) -> Tokens
+invalidTokens :: S.Seq Char -> Tokens v
 invalidTokens s = InvalidTokens s
 
 -- Wrapper template
-emptyTokens :: Tokens
+emptyTokens :: Tokens v
 emptyTokens = NoTokens
 
 --------- Combination functions, the conquer step
 
 -- Generic template
 -- Combines two transition maps
-combineTokens :: Transition -> Transition -> Transition
+combineTokens :: Measured v IntToken => Transition v -> Transition v -> Transition v
 combineTokens trans1 trans2 in_state | isInvalid toks1 = toks1
                                      | isEmpty toks1   = trans2 in_state
                                      | otherwise = combineWithRHS toks1 trans2
@@ -240,7 +246,7 @@ combineTokens trans1 trans2 in_state | isInvalid toks1 = toks1
 -- Generic template
 -- Tries to merge tokens first, if it can't it either appends the token or calls
 -- itself if the suffix contains Tokens instaed of a single token.
-combineWithRHS :: Tokens -> Transition -> Tokens
+combineWithRHS :: Measured v IntToken => Tokens v -> Transition v -> Tokens v
 combineWithRHS toks1 trans2 | isEmpty toks2 = toks1
                             | isValid toks2 =
     let toks2' = mergeTokens (lastToken toks1) toks2 trans2
@@ -258,7 +264,7 @@ combineWithRHS toks1 trans2 | isEmpty toks2 = toks1
 -- Creates one token from the last token of the first sequence and and the first
 -- token of the second sequence and inserts it between the init of the first
 -- sequence and the tail of the second sequence
-mergeTokens :: Suffix -> Tokens -> Transition -> Tokens
+mergeTokens :: Measured v IntToken => Suffix v -> Tokens v -> Transition v -> Tokens v
 mergeTokens suff1 toks2 trans2 = case viewl (currentSeq toks2) of
   token2 :< seq2' -> let newToken = mergeToken suff1 token2
                      in toks2 {currentSeq = newToken <| seq2'}
@@ -270,12 +276,12 @@ mergeTokens suff1 toks2 trans2 = case viewl (currentSeq toks2) of
 
 -- Generic template
 -- Creates on token from a suffix and a token
-mergeToken :: Suffix -> IntToken -> IntToken
+mergeToken :: Suffix v -> IntToken -> IntToken
 mergeToken suff1 token2 = token2 {lexeme = suffToStr suff1 <> lexeme token2}
 
 -- Generic template
 -- Creates the apropiet new suffix from two suffixes
-mergeSuff :: Suffix -> Suffix -> Transition -> Suffix
+mergeSuff :: Measured v IntToken => Suffix v -> Suffix v -> Transition v -> Suffix v
 mergeSuff (Multi toks1) suff2 trans2 = Multi $ -- O(n^2)
   let newToks = combineWithRHS toks1 trans2
   in if isValid $ newToks
@@ -292,19 +298,19 @@ mergeSuff suff1 (Multi toks2) trans2 = Multi $ mergeTokens suff1 toks2 trans2 --
 
 -- Generic template
 -- Prepends a sequence of tokens on the sequence in Tokens
-appendTokens :: Seq IntToken -> Tokens -> Tokens
-appendTokens seq1 toks2 | isValid toks2 =
-  toks2 {currentSeq = seq1 <> currentSeq toks2}
+appendTokens :: Measured v IntToken => FingerTree v IntToken -> Tokens v -> Tokens v
+appendTokens seq1 toks2 | isValid toks2 = toks2 {currentSeq = seq1 <> currentSeq toks2}
                         | otherwise = toks2
 
 ---------- Constructors
 
 -- Generic template
-makeTree :: String -> LexTree
+makeTree :: Monoid v => String -> LexTree v
 makeTree  = fromList
 
+{-
 -- Wrapper template
-measureToTokens :: (Table State Tokens,Size) -> Seq Token
+measureToTokens :: (Table State (Tokens v),Size) -> FingerTree v IntToken
 measureToTokens m = case access (fst $ m) startState of
   InvalidTokens s -> error $ "Unacceptable token: " ++ toList s
   NoTokens -> empty
@@ -314,41 +320,44 @@ measureToTokens m = case access (fst $ m) startState of
           let pos' = foldl alexMove pos lex
           in case accs of
             [] -> (pos',toks)
-            AlexAcc f:_ -> (pos',toks |> f pos lex)
+            AlexAcc f:_   -> (pos',toks |> f pos lex)
             AlexAccSkip:_ -> (pos',toks)
+
+        intToks :: Measured v IntToken => FingerTree v IntToken -> Suffix v -> FingerTree v IntToken
         intToks seq (Str str) = error $ "Unacceptable token: " ++ toList str
         intToks seq (One token) = seq |> token
         intToks seq (Multi (Tokens seq' suff' _)) = intToks (seq <> seq') suff'
 
 -- Generic template
-treeToTokens :: LexTree -> Seq Token
+treeToTokens :: LexTree v -> FingerTree v IntToken
 treeToTokens = measureToTokens . measure
+-}
 
 ------------- Util funs
 
 -- Wrapper template
-isValid :: Tokens -> Bool
+isValid :: Tokens v -> Bool
 isValid (Tokens _ _ _) = True
 isValid _ = False
 
 -- Wrapper template
-isEmpty :: Tokens -> Bool
+isEmpty :: Tokens v -> Bool
 isEmpty NoTokens = True
 isEmpty _        = False
 
 -- Wrapper template
-isInvalid :: Tokens -> Bool
+isInvalid :: Tokens v -> Bool
 isInvalid (InvalidTokens _) = True
 isInvalid _ = False
 
 -- Generic template
-suffToStr :: Suffix -> Seq Char
+suffToStr :: Suffix v -> S.Seq Char
 suffToStr (Str s) = s
 suffToStr (One token) = lexeme token
 suffToStr (Multi toks) =
   concatLexemes (currentSeq toks) <> suffToStr (lastToken toks)
 
-isAccepting :: Tokens -> Bool
+isAccepting :: Tokens v -> Bool
 isAccepting (Tokens _ suff _) = case suff of
   Str _ -> False
   One _ -> True
@@ -357,30 +366,30 @@ isAccepting NoTokens = True
 isAccepting _ = False
 
 -- Genereic template
-concatLexemes :: Seq IntToken -> Seq Char
+concatLexemes :: FingerTree v IntToken -> S.Seq Char
 concatLexemes = foldr ((<>) . lexeme) mempty
 
-insertAtIndex :: String -> Int -> LexTree -> LexTree
+insertAtIndex :: Monoid v => String -> Int -> LexTree v -> LexTree v
 insertAtIndex str i tree = 
   if i < 0
   then error "index must be >= 0"
   else l <> (makeTree str) <> r
      where (l,r) = splitTreeAt i tree
 
-splitTreeAt :: Int -> LexTree -> (LexTree,LexTree)
+splitTreeAt :: Monoid v => Int -> LexTree v -> (LexTree v,LexTree v)
 splitTreeAt i tree = split (\(_,s) -> getSum s>i) tree
 
-size :: LexTree -> Int
+size :: Monoid v => LexTree v -> Int
 size tree = getSum . snd $ measure tree
 
-suffSize :: Suffix -> Int
+suffSize :: Suffix v -> Int
 suffSize (Multi toks) = toksSize toks
-suffSize (Str s) = SS.length s
-suffSize (One (Token lex _)) = SS.length lex
+suffSize (Str s) = S.length s
+suffSize (One (Token lex _)) = S.length lex
 
-toksSize :: Tokens -> Int
+toksSize :: Tokens v -> Int
 toksSize (Tokens seq suff _) = suffSize suff + foldl bla 0 seq
-  where bla _ (Token lex _) = SS.length lex
+  where bla _ (Token lex _) = S.length lex
 toksSize _ = 0
 
 -- wrapper template
