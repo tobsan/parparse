@@ -8,20 +8,22 @@ import Data.Monoid
 
 import Java
 
+data AST = AST
+
 -- This is where the matrix stuff should go
-data Parser = A
+data Parse a = Q (Parse a) (Parse a) (Parse a) (Parse a)
+             | One a
+             | Z
 
-instance Monoid Parser where
-    mempty = A -- empty
-    a0 `mappend` a1 = A -- Do we have a0a1 \elem P?
+instance Monoid (Parse a) where
+    mempty = Z
+    Z `mappend` a1 = Z 
+    a1 `mappend` Z = Z
 
--- Which one of these would be most reasonable? Let's find out!
 
-instance Measured Parser (Seq Token) where
-    measure seq = undefined
-    
-instance Measured Parser (Table State Tokens, Size) where
+instance Measured (Parse AST) (Table State Tokens, Size) where
     measure tab = undefined
+
 
 --
 -- lexer input >>= \tree -> parser tree >>= \abssyn
