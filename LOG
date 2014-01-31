@@ -1,6 +1,18 @@
 Log of progress, meetings etc
 =============================
 
+Notes 2014-01-31
+================
+* Parametrization of LexGen results were successful, it forced some new
+  constraints to many functions, but looks good otherwise.
+  NOTE: This was not obvious to me, but neccessary in order to make the results
+        work incrementally.
+
+* Now we more or less want to use the tables from bnfc --cnf to see what parts
+  we can use to see if we have A0A1 \elem P.
+
+* We want sigma to be measure and A0A1 \elem P as mappend.
+
 Supervision 2014-01-27
 ======================
 * We don't want to do measure . measure, but rather have LexGen store its result
