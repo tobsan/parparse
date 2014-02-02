@@ -1,5 +1,16 @@
-Log of progress, meetings etc
-=============================
+Log of progress, meetings, but also random thoughts.
+====================================================
+
+Further Notes 2014-01-31
+========================
+* It is disturbing although convenient to write this code for a specific
+  language. Care must be taken to make sure it is easy to generalize.
+
+* Eh...in what way can the CYK tables be used in the matrix stuff? Needs to be
+  further examined as of now.
+
+* Remember to print "important" MSc thesis forms on monday. Also: planning
+  report should be done some time..
 
 Notes 2014-01-31
 ================

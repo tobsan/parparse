@@ -10,14 +10,9 @@ module Java where
 #elif defined(__GLASGOW_HASKELL__)
 #include "config.h"
 #endif
-#if __GLASGOW_HASKELL__ >= 503
 import Data.Array
-import Data.Char (ord)
 import Data.Array.Base (unsafeAt)
-#else
-import Array
-import Char (ord)
-#endif
+
 import Prelude hiding (foldl,foldr,null)
 import Data.FingerTree -- (FingerTree,Measured,measure,split,fromList)
 import qualified Data.Sequence as S 
@@ -216,6 +211,13 @@ instance Monoid v => Measured (Table State (Tokens v),Size) Char where
 -- This is where the sigma function should end up
 instance Monoid v => Measured v IntToken where
     measure tok = undefined
+
+instance Monoid Category where
+    mempty          = undefined
+    c1 `mappend` c2 = case combine True c1 c2 of
+        [] :/: []    -> error "NOES" -- ehh?
+        left :/: []  -> fst left  -- error, or what?
+        [] :/: right -> fst right
 
 createToken :: S.Seq Char -> Accepts -> IntToken
 createToken lex acc = Token lex acc
