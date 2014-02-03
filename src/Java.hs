@@ -23,7 +23,7 @@ import Data.Monoid
 import Data.Word
 import Data.Bits
 
-lexCode :: Monoid v => String -> LexTree v 
+lexCode ::  Measured v IntToken => String -> LexTree v 
 lexCode = makeTree
 -- tokens = treeToTokens
 
@@ -152,13 +152,13 @@ data Tokens v = NoTokens
                         , outState   :: !State}
 -- The suffix is the the sequence of as long as possible accepting tokens.
 -- It can itself contain a suffix for the last token.
-                 deriving Show
+                 -- deriving Show
 --This is either a Sequence of tokens or one token if the it hits an accepting state with later characters
 -- Generic template
 data Suffix v = Str !(S.Seq Char)
               | One !IntToken
               | Multi !(Tokens v)
-                 deriving Show
+                 -- deriving Show
 type Size     = Sum Int
 --Wrapper
 type LexTree v = FingerTree (Table State (Tokens v),Size) Char
@@ -190,13 +190,13 @@ instance Show IntToken where
             AlexAccSkip -> "Skip:" ++ show (lexeme token)
 
 -- Generic template
-instance Monoid v => Monoid (Table State (Tokens v)) where
+instance (Measured v IntToken) => Monoid (Table State (Tokens v)) where
   mempty = tabulate stateRange (\_ -> emptyTokens)
   f `mappend` g = tabulate stateRange $ combineTokens (access f) (access g)
 
 -- Wrapper template
 -- The base case for when one character is lexed.
-instance Monoid v => Measured (Table State (Tokens v),Size) Char where
+instance (Measured v IntToken) => Measured (Table State (Tokens v),Size) Char where
   measure c =
     let bytes = encode c
         cSeq = S.singleton c
@@ -208,18 +208,14 @@ instance Monoid v => Measured (Table State (Tokens v),Size) Char where
             acc -> Tokens empty (One (createToken cSeq acc)) os
     in (tabulate stateRange $ baseCase, Sum 1)
 
--- This is where the sigma function should end up
-instance Monoid v => Measured v IntToken where
-    measure tok = undefined
-
 -- And this would be where A0A1 \elem P should be computed
 -- Should this even be Category? Well, I think so.
-instance Monoid Category where
-    mempty          = undefined
-    c1 `mappend` c2 = case combine True c1 c2 of
-        [] :/: []    -> error "NOES" -- ehh?
-        left :/: []  -> fst left  -- error, or what?
-        [] :/: right -> fst right
+-- instance Monoid Category where
+--     mempty          = undefined
+--     c1 `mappend` c2 = case combine True c1 c2 of
+--         [] :/: []    -> error "NOES" -- ehh?
+--         left :/: []  -> fst left  -- error, or what?
+--         [] :/: right -> fst right
 
 createToken :: S.Seq Char -> Accepts -> IntToken
 createToken lex acc = Token lex acc
@@ -309,7 +305,7 @@ appendTokens seq1 toks2 | isValid toks2 = toks2 {currentSeq = seq1 <> currentSeq
 ---------- Constructors
 
 -- Generic template
-makeTree :: Monoid v => String -> LexTree v
+makeTree :: Measured v IntToken => String -> LexTree v
 makeTree  = fromList
 
 {-
@@ -373,17 +369,17 @@ isAccepting _ = False
 concatLexemes :: FingerTree v IntToken -> S.Seq Char
 concatLexemes = foldr ((<>) . lexeme) mempty
 
-insertAtIndex :: Monoid v => String -> Int -> LexTree v -> LexTree v
+insertAtIndex :: Measured v IntToken => String -> Int -> LexTree v -> LexTree v
 insertAtIndex str i tree = 
   if i < 0
   then error "index must be >= 0"
   else l <> (makeTree str) <> r
      where (l,r) = splitTreeAt i tree
 
-splitTreeAt :: Monoid v => Int -> LexTree v -> (LexTree v,LexTree v)
+splitTreeAt :: Measured v IntToken => Int -> LexTree v -> (LexTree v,LexTree v)
 splitTreeAt i tree = split (\(_,s) -> getSum s>i) tree
 
-size :: Monoid v => LexTree v -> Int
+size :: Measured v IntToken => LexTree v -> Int
 size tree = getSum . snd $ measure tree
 
 suffSize :: Suffix v -> Int

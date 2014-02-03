@@ -1,6 +1,15 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-02-03
+==========
+
+merge function
+
+...Quad.hs:
+ mergein :: RingP a => Bool -> SomeTri a -> Pair a -> SomeTri a -> SomeTri a
+
+ 
 Further Notes 2014-01-31
 ========================
 * It is disturbing although convenient to write this code for a specific
