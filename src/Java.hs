@@ -212,6 +212,8 @@ instance Monoid v => Measured (Table State (Tokens v),Size) Char where
 instance Monoid v => Measured v IntToken where
     measure tok = undefined
 
+-- And this would be where A0A1 \elem P should be computed
+-- Should this even be Category? Well, I think so.
 instance Monoid Category where
     mempty          = undefined
     c1 `mappend` c2 = case combine True c1 c2 of
