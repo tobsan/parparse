@@ -171,18 +171,13 @@ data IntToken  = Token { lexeme   :: !(S.Seq Char)
                       , token_id :: Accepts}
 --Wrapper template
 type Accepts   = [AlexAcc (Posn -> S.Seq Char -> Token) ()]
+type Table a b = Array State b
 
 tabulate :: (State,State) -> (State -> b) -> Table State b
-access :: Table State b -> (State -> b)
-
---debug stuff
--- instance Show b => Show (Table Int b) where
---   show f = unlines $ ["\n\n\n\n" ++ show i ++ " -> " ++ show (access f i) | i <- [0,29]]
-
-type Table a b = Array State b
 tabulate range f = listArray range [f i | i <- [fst range..snd range]]
+
+access :: Table State b -> (State -> b)
 access a x = a ! x
---}
 
 -- debug stuffs
 instance Show IntToken where
@@ -212,15 +207,6 @@ instance (Measured v IntToken) => Measured (Table State (Tokens v),Size) Char wh
             []  -> Tokens empty (Str cSeq) os
             acc -> Tokens empty (One (createToken cSeq acc)) os
     in (tabulate stateRange $ baseCase, Sum 1)
-
--- And this would be where A0A1 \elem P should be computed
--- Should this even be Category? Well, I think so.
--- instance Monoid Category where
---     mempty          = undefined
---     c1 `mappend` c2 = case combine True c1 c2 of
---         [] :/: []    -> error "NOES" -- ehh?
---         left :/: []  -> fst left  -- error, or what?
---         [] :/: right -> fst right
 
 createToken :: S.Seq Char -> Accepts -> IntToken
 createToken lex acc = Token lex acc
@@ -473,145 +459,11 @@ alex_action_23 =  tok (\p s -> PT p (TD $ share s))
 -- This code is in the PUBLIC DOMAIN; you may copy it freely and use
 -- it for any purpose whatsoever.
 
--- -----------------------------------------------------------------------------
--- INTERNALS and main scanner engine
-{-
-alexIndexInt16OffAddr arr off = arr ! off
-
-
-alexIndexInt32OffAddr arr off = arr ! off
-
-
-quickIndex arr i = arr ! i
--}
-
--- -----------------------------------------------------------------------------
--- Main lexing routines
-{-
-data AlexReturn a
-  = AlexEOF
-  | AlexError  !AlexInput
-  | AlexSkip   !AlexInput !Int
-  | AlexToken  !AlexInput !Int a
-
--- alexScan :: AlexInput -> StartCode -> AlexReturn a
-alexScan input (sc)
-  = alexScanUser undefined input (sc)
-
-alexScanUser user input (sc)
-  = case alex_scan_tkn user input (0) input sc AlexNone of
-	(AlexNone, input') ->
-		case alexGetByte input of
-			Nothing -> 
-
-
-
-				   AlexEOF
-			Just _ ->
-
-
-
-				   AlexError input'
-
-	(AlexLastSkip input'' len, _) ->
-
-
-
-		AlexSkip input'' len
-
-	(AlexLastAcc k input''' len, _) ->
-
-
-
-		AlexToken input''' len k
-
-
--- Push the input through the DFA, remembering the most recent accepting
--- state it encountered.
-
-alex_scan_tkn user orig_input len input s last_acc =
-  input `seq` -- strict in the input
-  let 
-	new_acc = (check_accs (alex_accept `quickIndex` (s)))
-  in
-  new_acc `seq`
-  case alexGetByte input of
-     Nothing -> (new_acc, input)
-     Just (c, new_input) -> 
-
-
-
-	let
-		(base) = alexIndexInt32OffAddr alex_base s
-		((ord_c)) = fromIntegral c
-		(offset) = (base + ord_c)
-		(check)  = alexIndexInt16OffAddr alex_check offset
-		
-		(new_s) = if (offset >= (0)) && (check == ord_c)
-			  then alexIndexInt16OffAddr alex_table offset
-			  else alexIndexInt16OffAddr alex_deflt s
-	in
-	case new_s of 
-	    (-1) -> (new_acc, input)
-		-- on an error, we want to keep the input *before* the
-		-- character that failed, not after.
-    	    _ -> alex_scan_tkn user orig_input (if c < 0x80 || c >= 0xC0 then (len + (1)) else len)
-                                                -- note that the length is increased ONLY if this is the 1st byte in a char encoding)
-			new_input new_s new_acc
-
-  where
-	check_accs [] = last_acc
-	check_accs (AlexAcc a : _) = AlexLastAcc a input (len)
-	check_accs (AlexAccSkip : _)  = AlexLastSkip  input (len)
-	check_accs (AlexAccPred a predx : rest)
-	   | predx user orig_input (len) input
-	   = AlexLastAcc a input (len)
-	check_accs (AlexAccSkipPred predx : rest)
-	   | predx user orig_input (len) input
-	   = AlexLastSkip input (len)
-	check_accs (_ : rest) = check_accs rest
-
-data AlexLastAcc a
-  = AlexNone
-  | AlexLastAcc a !AlexInput !Int
-  | AlexLastSkip  !AlexInput !Int
-
-instance Functor AlexLastAcc where
-    fmap f AlexNone = AlexNone
-    fmap f (AlexLastAcc x y z) = AlexLastAcc (f x) y z
-    fmap f (AlexLastSkip x y) = AlexLastSkip x y
--}
 data AlexAcc a user
   = AlexAcc a
   | AlexAccSkip
---  | AlexAccPred a (AlexAccPred user)
---  | AlexAccSkipPred (AlexAccPred user)
-{-
-type AlexAccPred user = user -> AlexInput -> Int -> AlexInput -> Bool
 
--- -----------------------------------------------------------------------------
--- Predicates on a rule
+--
+-- Tobsan deleted lots of alex code that was commented out here
+--
 
-alexAndPred p1 p2 user in1 len in2
-  = p1 user in1 len in2 && p2 user in1 len in2
-
---alexPrevCharIsPred :: Char -> AlexAccPred _ 
-alexPrevCharIs c _ input _ _ = c == alexInputPrevChar input
-
-alexPrevCharMatches f _ input _ _ = f (alexInputPrevChar input)
-
---alexPrevCharIsOneOfPred :: Array Char Bool -> AlexAccPred _ 
-alexPrevCharIsOneOf arr _ input _ _ = arr ! alexInputPrevChar input
-
---alexRightContext :: Int -> AlexAccPred _
-alexRightContext (sc) user _ _ input = 
-     case alex_scan_tkn user input (0) input sc AlexNone of
-	  (AlexNone, _) -> False
-	  _ -> True
-	-- TODO: there's no need to find the longest
-	-- match when checking the right context, just
-	-- the first match will do.
-
--- used by wrappers
-iUnbox (i) = i
--}
