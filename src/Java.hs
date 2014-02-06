@@ -25,7 +25,12 @@ import Data.Bits
 
 lexCode ::  Measured v IntToken => String -> LexTree v 
 lexCode = makeTree
+
+tokens :: Measured v IntToken => LexTree v -> FingerTree v IntToken
+tokens = undefined
 -- tokens = treeToTokens
+
+printTree = undefined
 
 alex_base :: Array Int Int
 alex_base = listArray (0,90) [-8,77,291,-109,-32,-31,419,-96,-95,-104,45,547,-85,78,292,-94,315,-91,803,739,0,852,1108,1202,1127,1383,1319,1575,1198,1661,0,1513,115,140,1917,1918,350,1221,2065,-87,2168,2104,0,2350,0,2564,141,139,79,75,-45,60,-44,-42,-72,0,-38,2319,312,-81,-48,0,0,2329,-52,11,0,0,2561,2774,-20,47,0,0,2571,2784,2817,0,0,0,0,2861,2960,3059,3158,3257,0,3334,3372,3405,3415]
@@ -48,12 +53,12 @@ tok f p s = f p s
 share = id
 
 data Tok =
-   TS !(S.Seq Char)     -- reserved words and symbols
- | TL !(S.Seq Char)     -- string literals
- | TI !(S.Seq Char)     -- integer literals
- | TV !(S.Seq Char)     -- identifiers
- | TD !(S.Seq Char)     -- double precision float literals
- | TC !(S.Seq Char)     -- character literals
+   TS !(S.Seq Char) !Int -- reserved words and symbols
+ | TL !(S.Seq Char)      -- string literals
+ | TI !(S.Seq Char)      -- integer literals
+ | TV !(S.Seq Char)      -- identifiers
+ | TD !(S.Seq Char)      -- double precision float literals
+ | TC !(S.Seq Char)      -- character literals
  | T_Unsigned !(S.Seq Char)
  | T_Long !(S.Seq Char)
  | T_UnsignedLong !(S.Seq Char)
@@ -88,7 +93,7 @@ posLineCol (Pn _ l c) = (l,c)
 mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
 prToken t = case t of
-  PT _ (TS s) -> toList s
+  PT _ (TS s _) -> toList s
   PT _ (TI s) -> toList s
   PT _ (TV s) -> toList s
   PT _ (TD s) -> toList s
@@ -124,7 +129,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords = b "int" (b "double" (b "catch" (b "break" (b "boolean" (b "abstract" N N) N) (b "case" (b "byte" N N) N)) (b "continue" (b "class" (b "char" N N) N) (b "do" (b "default" N N) N))) (b "float" (b "false" (b "extends" (b "else" N N) N) (b "finally" (b "final" N N) N)) (b "implements" (b "if" (b "for" N N) N) (b "instanceof" (b "import" N N) N)))) (b "static" (b "package" (b "native" (b "long" (b "interface" N N) N) (b "null" (b "new" N N) N)) (b "public" (b "protected" (b "private" N N) N) (b "short" (b "return" N N) N))) (b "throws" (b "synchronized" (b "switch" (b "super" N N) N) (b "throw" (b "this" N N) N)) (b "try" (b "true" (b "transient" N N) N) (b "while" (b "volatile" N N) N))))
-   where b s = B (S.fromList s) (TS (S.fromList s))
+   where b s = B (S.fromList s) (TS (S.fromList s) 1) -- TODO: The Integer?!
 
 unescapeInitTail :: S.Seq Char -> S.Seq Char
 unescapeInitTail = unesc . tail . toList where
@@ -146,9 +151,8 @@ type Transition v = State -> (Tokens v) -- Transition from in state to Tokens
 -- Wrapper template?
 data Tokens v = NoTokens
               | InvalidTokens !(S.Seq Char)
-              | Tokens { currentSeq :: !(FingerTree v IntToken) -- (S.Seq IntToken)
+              | Tokens { currentSeq  :: !(FingerTree v IntToken)
                         , lastToken  :: !(Suffix v)
---                        , lastChar   :: !Char
                         , outState   :: !State}
 -- The suffix is the the sequence of as long as possible accepting tokens.
 -- It can itself contain a suffix for the last token.
@@ -199,6 +203,7 @@ instance (Measured v IntToken) => Monoid (Table State (Tokens v)) where
 instance (Measured v IntToken) => Measured (Table State (Tokens v),Size) Char where
   measure c =
     let bytes = encode c
+        sing = singleton c
         cSeq = S.singleton c
         baseCase in_state | in_state == -1 = InvalidTokens cSeq
                           | otherwise = case foldl automata in_state bytes of
@@ -310,26 +315,31 @@ makeTree  = fromList
 
 {-
 -- Wrapper template
-measureToTokens :: (Table State (Tokens v),Size) -> FingerTree v IntToken
+measureToTokens :: Measured v IntToken => (Table State (Tokens v),Size) -> FingerTree v Token
 measureToTokens m = case access (fst $ m) startState of
   InvalidTokens s -> error $ "Unacceptable token: " ++ toList s
   NoTokens -> empty
-  Tokens seq suff out_state ->
+  Tokens seq suff out_state -> 
     snd $ foldlWithIndex showToken (Pn 0 1 1,empty) $ intToks seq suff
-  where showToken (pos,toks) _ (Token lex accs) =
-          let pos' = foldl alexMove pos lex
-          in case accs of
-            [] -> (pos',toks)
-            AlexAcc f:_   -> (pos',toks |> f pos lex)
-            AlexAccSkip:_ -> (pos',toks)
+  where 
+    -- Reconstructing the one from Data.Sequence
+    foldlWithIndex :: (b -> Int -> a -> b) -> b -> FingerTree v a -> b
+    foldlWithIndex f z xs = foldl (\ g x i -> i `seq` f (g (i - 1)) i x) (const z) xs (length xs - 1)
 
-        intToks :: Measured v IntToken => FingerTree v IntToken -> Suffix v -> FingerTree v IntToken
-        intToks seq (Str str) = error $ "Unacceptable token: " ++ toList str
-        intToks seq (One token) = seq |> token
-        intToks seq (Multi (Tokens seq' suff' _)) = intToks (seq <> seq') suff'
+    showToken (pos,toks) _ (Token lex accs) =
+      let pos' = foldl alexMove pos lex
+      in case accs of
+        [] -> (pos',toks)
+        AlexAcc f:_   -> (pos',toks |> f pos lex)
+        AlexAccSkip:_ -> (pos',toks)
+
+    intToks :: Measured v IntToken => FingerTree v IntToken -> Suffix v -> FingerTree v IntToken
+    intToks seq (Str str) = error $ "Unacceptable token: " ++ toList str
+    intToks seq (One token) = seq |> token
+    intToks seq (Multi (Tokens seq' suff' _)) = intToks (seq <> seq') suff'
 
 -- Generic template
-treeToTokens :: LexTree v -> FingerTree v IntToken
+treeToTokens :: Measured v IntToken => LexTree v -> FingerTree v IntToken
 treeToTokens = measureToTokens . measure
 -}
 
@@ -436,7 +446,7 @@ encode  = map fromIntegral . go . fromEnum
                         , 0x80 + oc .&. 0x3f
                         ]
 
-alex_action_3 =  tok (\p s -> PT p (TS $ share s)) 
+alex_action_3 =  tok (\p s -> PT p (TS (share s) 1)) 
 alex_action_4 =  tok (\p s -> PT p (eitherResIdent (T_Unsigned . share) s)) 
 alex_action_5 =  tok (\p s -> PT p (eitherResIdent (T_Long . share) s)) 
 alex_action_6 =  tok (\p s -> PT p (eitherResIdent (T_UnsignedLong . share) s)) 

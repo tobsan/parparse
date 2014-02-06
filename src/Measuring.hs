@@ -1,28 +1,22 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
+UndecidableInstances, DataKinds #-}
 
 module Measuring where
 
 import Data.FingerTree (Measured, measure)
-import Data.Sequence
 import Data.Monoid
 
-import Java
+import Java hiding (One)
+import CnfTablesJava
+import Data.Matrix.Quad
+import Algebra.RingUtils
 
-data AST = AST
+instance Monoid (Mat x y a) where
+    mempty = Zero
+    t0 `mappend` t1 = undefined -- chop!
 
--- This is where the matrix stuff should go
-data Parse a = Q (Parse a) (Parse a) (Parse a) (Parse a)
-             | One a
-             | Z
-
-instance Monoid (Parse a) where
-    mempty = Z
-    Z `mappend` a1 = Z 
-    a1 `mappend` Z = Z
-
-
-instance Measured (Parse AST) (Table State Tokens, Size) where
-    measure tab = undefined
+instance Measured (Mat x x IntToken) IntToken where
+    measure tok = One tok
 
 
 --

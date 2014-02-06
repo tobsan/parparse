@@ -1,4 +1,4 @@
-{-# LANGUAGE MagicHash, FlexibleInstances #-}
+{-# LANGUAGE MagicHash, FlexibleInstances, MultiParamTypeClasses #-}
 module CnfTablesJava where
 import GHC.Prim
 import GHC.Exts
@@ -6,18 +6,23 @@ import Control.Applicative hiding (Const)
 import Algebra.RingUtils
 import Parsing.Chart ()
 import AbsJava
-import LexJava
-import PrintJava
-readInteger :: String -> Integer
-readInteger = read
-readDouble :: String -> Double
-readDouble = read
+
+import Java
+import Data.Sequence
+import Data.Foldable
+
+readInteger :: Seq Char -> Integer
+readInteger = read . toList
+readDouble :: Seq Char -> Double
+readDouble = read . toList
+
 instance RingP [(CATEGORY,Any)] where
   mul p a b = trav [map (app tx ty) l :/: map (app tx ty) r | (x,tx) <- a, (y,ty) <- b, let l:/:r = combine p x y]
     where trav :: [Pair [a]] -> Pair [a]
           trav [] = pure []
           trav (x:xs) = (++) <$> x <*> trav xs
           app tx ty (z,f)  = (z, f tx ty)
+
 showAst (cat,ast) = case cat of 
       CAT_ProgramFile -> printTree ((unsafeCoerce# ast)::ProgramFile)
       CAT_Import -> printTree ((unsafeCoerce# ast)::Import)
@@ -366,7 +371,6 @@ data CATEGORY = CAT_ProgramFile|
                 TOK_62626261|
                 TOK_63|
                 TOK_|
-                TOK__List|
                 TOK__List|
                 TOK_94|
                 TOK_9461|
