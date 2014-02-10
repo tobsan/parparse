@@ -5,8 +5,6 @@
 {-# OPTIONS_GHC -w #-}
 module LexJavaletteLight where
 
-
-
 import qualified Data.Bits
 import Data.Word (Word8)
 
@@ -15,14 +13,10 @@ import Data.Word (Word8)
 #elif defined(__GLASGOW_HASKELL__)
 #include "config.h"
 #endif
-#if __GLASGOW_HASKELL__ >= 503
-import Data.Array
-import Data.Char (ord)
-import Data.Array.Base (unsafeAt)
-#else
 import Array
 import Char (ord)
 #endif
+
 alex_base :: Array Int Int
 alex_base = listArray (0,29) [-8,-36,74,288,416,544,800,-70,0,785,999,0,145,-35,140,353,914,1255,1191,0,1437,0,1651,18,-34,0,1868,1060,1400,1410]
 
