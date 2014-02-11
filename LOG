@@ -1,6 +1,18 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-02-11
+==========
+* It is frustrating that my progress is insanely slow
+* Exactly what is the plan?
+    - Merge LexGen and ParParse
+        - LexGen measure should be Token instead of IntToken
+        - How to add Posn to each token while still lazy/incremental?
+        - There are lots of other stuff to change in LexGen to conform it to
+          BNFC generated code for future use.
+    - Merge-function in Quad.hs
+        - What is the point of having Pair (Mat x y a) ?
+
 2014-02-03
 ==========
 
