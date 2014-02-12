@@ -4,14 +4,7 @@
 {-# OPTIONS -fno-warn-incomplete-patterns #-}
 module Java where
 
---Genereic template
-#if __GLASGOW_HASKELL__ >= 603
-#include "ghcconfig.h"
-#elif defined(__GLASGOW_HASKELL__)
-#include "config.h"
-#endif
 import Data.Array
-import Data.Array.Base (unsafeAt)
 
 import Prelude hiding (foldl,foldr,null)
 import Data.FingerTree -- (FingerTree,Measured,measure,split,fromList)
@@ -89,9 +82,13 @@ tokenPos (PT (Pn _ l _) _ :_) = "line " ++ show l
 tokenPos (Err (Pn _ l _) :_) = "line " ++ show l
 tokenPos _ = "end of file"
 
+posLineCol :: Posn -> (Int,Int)
 posLineCol (Pn _ l c) = (l,c)
+
+mkPosToken :: Token -> ((Int,Int), String)
 mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
+prToken :: Token -> String
 prToken t = case t of
   PT _ (TS s _) -> toList s
   PT _ (TI s) -> toList s
@@ -128,6 +125,7 @@ eitherResIdent tv s = treeFind resWords
                               | s > a  = treeFind right
                               | s == a = t
 
+resWords :: BTree
 resWords = b "int" (b "double" (b "catch" (b "break" (b "boolean" (b "abstract" N N) N) (b "case" (b "byte" N N) N)) (b "continue" (b "class" (b "char" N N) N) (b "do" (b "default" N N) N))) (b "float" (b "false" (b "extends" (b "else" N N) N) (b "finally" (b "final" N N) N)) (b "implements" (b "if" (b "for" N N) N) (b "instanceof" (b "import" N N) N)))) (b "static" (b "package" (b "native" (b "long" (b "interface" N N) N) (b "null" (b "new" N N) N)) (b "public" (b "protected" (b "private" N N) N) (b "short" (b "return" N N) N))) (b "throws" (b "synchronized" (b "switch" (b "super" N N) N) (b "throw" (b "this" N N) N)) (b "try" (b "true" (b "transient" N N) N) (b "while" (b "volatile" N N) N))))
    where b s = B (S.fromList s) (TS (S.fromList s) 1) -- TODO: The Integer?!
 
@@ -297,7 +295,7 @@ appendTokens seq1 toks2 | isValid toks2 = toks2 {currentSeq = seq1 <> currentSeq
 
 -- Generic template
 makeTree :: Measured v IntToken => String -> LexTree v
-makeTree  = fromList
+makeTree str = fromList str
 
 {-
 -- Wrapper template
@@ -323,7 +321,8 @@ measureToTokens m = case access (fst $ m) startState of
     intToks seq (Str str) = error $ "Unacceptable token: " ++ toList str
     intToks seq (One token) = seq |> token
     intToks seq (Multi (Tokens seq' suff' _)) = intToks (seq <> seq') suff'
-
+-}
+{-
 -- Generic template
 treeToTokens :: Measured v IntToken => LexTree v -> FingerTree v IntToken
 treeToTokens = measureToTokens . measure
@@ -391,12 +390,14 @@ toksSize _ = 0
 -- wrapper template
 alexMove :: Posn -> Char -> Posn
 alexMove (Pn a l c) '\t' = Pn (a+1)  l     (((c+7) `div` 8)*8+1)
-alexMove (Pn a l c) '\n' = Pn (a+1) (l+1)   1
+alexMove (Pn a l _) '\n' = Pn (a+1) (l+1)   1
 alexMove (Pn a l c) _    = Pn (a+1)  l     (c+1)
 
 -- Starting state
+startState :: Int
 startState = 0
 -- A tuple that says how many states there are
+stateRange :: (Int,Int)
 stateRange = let (start,end) = bounds alex_accept
              in (start-1,end)
 
