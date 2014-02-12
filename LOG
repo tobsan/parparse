@@ -1,6 +1,16 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes after supervision 2014-02-11
+==================================
+* The Pair (se below) has to do with the balancing (and the oracle stuff)
+    - NOTE to self: this is not at all obvious. Look it up further.
+* The issue of Posn can be solved by combining several monoids, so it should not
+  be a problem. This is something that is also implemented in Ropes in Yi. 
+* TODO: implement the recursive cases for chopLast/chopFirst
+    - NOTE to self: Draw matrices by hand, it makes stuff much easier.
+* For more dependently typed Haskell, "hasochism" from Haskell symposium 2013.
+
 2014-02-11
 ==========
 * It is frustrating that my progress is insanely slow
