@@ -1,6 +1,19 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes after supervision 2014-02-18
+==================================
+* chopFirstRow has to recurse on c and d in the base case. Creating four rows
+  will enable creation of a quad of everything except a b. The same goes for
+  chopLastCol etc.
+* For general type safety, the data type containing chop dependent data should
+  be separated into two types, one for rows and one for cols.
+* The change in alex template generation should be done in BNFC. Preferrably the
+  changes are connected to the --cnf option. This should probably be easy, so
+  best to do it as soon as possible.
+* The test program in BNFC will probably have to be changed slightly
+* Send the planning report to JPB before next supervision.
+
 Notes after supervision 2014-02-11
 ==================================
 * The Pair (se below) has to do with the balancing (and the oracle stuff)
