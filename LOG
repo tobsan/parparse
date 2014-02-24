@@ -1,6 +1,14 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes before supervision 2014-02-24
+===================================
+* How to implement the applicative pure for Mat x y. Lifting a value to a matrix
+  of arbitrary size seems...infeasible.
+* Is there a simple way to find the shape of a Mat without having it passed as
+  an argument in the first place?
+* What is the mul function in RingP really supposed to do?
+
 Notes after supervision 2014-02-18
 ==================================
 * chopFirstRow has to recurse on c and d in the base case. Creating four rows
