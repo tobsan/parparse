@@ -1,6 +1,13 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes after supervision 2014-02-24
+==================================
+* mkMat does not need Shapes as arguments, since they are already baked into the
+  Mat type.
+* It would be reasonable to have a chapter about dependently typed Haskell in
+  the final report.
+
 Notes before supervision 2014-02-24
 ===================================
 * How to implement the applicative pure for Mat x y. Lifting a value to a matrix
