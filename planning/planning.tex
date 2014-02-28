@@ -8,12 +8,10 @@
 
 \begin{document}
 \maketitle
-Note: references are omitted here; see the project proposal for details about
-those. Some material in this report has been reused from the proposal.
 
 \section*{Preliminary title}
 The preliminary title for this thesis is \textit{Incremental and parallel
-parsing in Yi}. An alternative, in case time doesn't permit implementation into
+parsing in Yi}. An alternative, in case time does not permit implementation into
 Yi would simply be \textit{Implementing incremental and parallel parsing}.
 
 \section*{Background}
@@ -21,24 +19,26 @@ Syntax highlighting is a key feature in modern day text editors. Programmers
 want to get information about how well their code conforms to the programming
 language grammar, but without having to compile or run their code. Instead of
 using the widely adopted regular expression approach to syntax highlighting, we
-could use a fast lexer and parser to give us syntax information in the form of
-an abstract syntax tree. Such a tree would provide more information about the
-given code, and makes for the ability to manipulate the code in new, cool ways.
+could use a lexer and parser that is both incremental and fast to give us syntax
+information in the form of an abstract syntax tree. Such a tree would provide
+more information about the given code, and makes for the ability to manipulate
+the code in new, cool ways.
 
 \section*{Aim for the work}
 The aim for this thesis project is to write an incremental, parallelizable
 parser in Haskell, which can be connected to the lexer written by Hugo and
-Hansson. The ultimate goal would be to put these both to the test by integrating
-them into the Yi text editor.
+Hansson\cite{hugohansson}. The ultimate goal would be to put these both to the
+test by integrating them into the Yi text editor.
 
-\section*{The assignment}
-Recent research by Claessen and Bernardy has shown that parsing of programming
-language text can be done efficiently by using a divide-and-conquer algorithm.
-Another MSc thesis by Hugo and Hansson has given an incremental
-divide-and-conquer lexer for a context-free grammar. The lexer is written in
-an incremental manner, but the proof-of-concept implementation of the parser is
-not. The main task is to reimplement the parser in an incremental fashion, and
-to integrate the lexer and parser to work as one. 
+\section*{Assignment}
+Recent research by Claessen and Bernardy\cite{parparsepaper} has shown that
+parsing of programming language text adhering to a context-free grammar can be
+done efficiently by using a divide-and-conquer algorithm, improved from
+Valiant's \cite{valiant}.  Another MSc thesis by Hugo and Hansson has given an
+incremental divide-and-conquer lexer for a context-free grammar. The lexer works
+in an incremental manner, but the proof-of-concept implementation of the parser
+is not. The main task is to reimplement the parser in an incremental fashion,
+and to integrate the lexer and parser to work together. 
 
 \section*{Delimitations}
 The project will be concerned with only the lexer generator and parsing, other
@@ -56,26 +56,81 @@ the editor and in a more stand-alone environment.
 
 \section*{Time plan}
 The project is planned for the spring semester of 2014. Implementation and
-integration of the components will be performed in several steps. Time plan will
-be revised during the work, together with the supervisor.
-\begin{enumerate}
-    \item{Study the background papers (first 1-2 weeks)}
-    \item{Implement the incremental parallel parser (should be done by end of
-          february}
-        \begin{itemize}
-            \item{Extend the matrix computation code}
-            \item{Write a parsing monoid that can be used together with BNFC
-                  generated code}
-            \item{Combine (by hand) the lexer and parser}
-        \end{itemize}
-    \item{Generalize (templatify) the lexer generator (should take no more than
-          two weeks)}
-    \item{Integrate the parser (with the lexer) into Yi (until the middle of
-          april)}
-    \item{Use syntactic information for cool stuff (if time permits it)}
-\end{enumerate}
+integration of the components will be performed in several steps. The time plan
+will be continuosly checked and possibly revised during the work, together with
+the supervisor.
+
+\subsection*{Background data}
+The first 1-2 weeks will be spent studying background papers and getting
+familiar with the lexer written by Hugo and Hansson. 
+
+\subsection*{Implement incremental parser}
+The incremental parser should be implemented and tested by March 9th. The parser
+will utilize finger trees as its primary data structure, just as the lexer does.
+There are two major steps in implementing the parser.
+
+First, the existing proof-of-concept implementation of parsing using matrix
+multiplication has to be extended in order to be usable from an incremental
+parsing approach where merging two sub-trees should be possible. This means
+implementing some new functionality into BNFC\cite{bnfc}.
+
+Second, a parsing monoid that can be used in the finger tree as well as with the
+matrix multiplication code in BNFC has to be written. The monoid should
+transform lexemes into the abstract syntax tree that the parser will output as a
+result, and will use the matrix multiplication to do this.
+
+\subsection*{Generalize the lexer generator}
+The currently working code from the lexer generator by Hugo and Hansson is
+specific to the Java programming language and uses a state machine generated by
+Alex internally. This can be generalized, since the state machine and data types
+for tokens are the only language-specific parts of their code. It should not be
+too much work to turn their results into something that BNFC can generate for
+any given language. Of course, a reasonable code generation from BNFC will also
+include the aforementioned parser. An estimated time frame for this is two
+weeks.
+
+\subsection*{Integration with Yi}
+Once the lexer and parser works, and can be generated given any context-free
+grammar, this should be integrated into the Yi text editor\cite{yieditor}, where
+incremental parsing could be used to check syntax correctness without having to
+call the compiler for the language. If time permits, this integration can be
+extended with functions that use the syntactic information to do cool stuff,
+such as AST transformations etc. 
+
+\subsection*{Report}
 By the middle of April, most of the coding should be finished, and focus should
-rather be on writing the report. Some coding will be done, however, since one
-usually finds some mistakes when writing about what was implemented.
+rather be on writing the report. However, we expect some debugging and
+beautifying of the code to take place during the writing phase, as documenting a
+piece of work usually reveals minor shortcomings.
+
+\begin{thebibliography}{9}
+
+\bibitem{parparsepaper}
+    Efficient Divide-and-Conquer Parsing of Practical Context-Free Languages \\
+    Jean-Philippe Bernardy, Koen Claessen \\
+    ICFP 2013
+
+\bibitem{hugohansson}
+    A generator of incremental divide-and-conquer lexers \\
+    Jonas Hugo, Christoffer Hansson \\
+    MSc Thesis, Chalmers University of Technology, draft as of February 2014
+
+\bibitem{valiant}
+    General Context-Free Recognition in Less than Cubic Time \\
+    Leslie G. Valiant \\ 
+    Journal of Computer and System Sciences 10, 1975
+
+\bibitem{yieditor}
+    Yi: an editor in Haskell for Haskell. \\
+    Jean-Philippe Bernardy \\
+    In Proc. of the first ACM SIGPLAN symposium on Haskell, pages 61–62. ACM,
+    2008.
+
+\bibitem{bnfc}
+    The BNF Converter \\
+    http://bnfc.digitalgrammars.com/
+
+\end{thebibliography}
 
 \end{document}
+
