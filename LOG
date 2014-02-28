@@ -1,6 +1,15 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes 2014-02-25
+================
+* IntToken -> Token thing, it's really weird to wrap around. The composition of
+  monoids makes no sense to me. An IntToken has Accepts as part of its record,
+  which is a list of [AlexAcc (Posn -> S.Seq Char -> Token)], so to create a
+  token from an IntToken we need both positions and a char sequence. How can
+  that be combined with a position and adding a char sequence as well?
+  Investigation needed!
+
 Notes after supervision 2014-02-24
 ==================================
 * mkMat does not need Shapes as arguments, since they are already baked into the
