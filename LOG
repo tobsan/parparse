@@ -1,6 +1,18 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-03
+
+TODO:
+  * Finish the "template"
+  * Write the measure instance from IntToks to SomeTri
+    * The boolean flag should be picked by using unsafePerformIO . random, but for now it can be constant.
+
+Ideas for keeping track of sizes:
+  * Write a ringP instance for (category,Any,Range), where range in a range of the input, measured in characters.
+  * Later, this ranging info can be put into bnfc nonterminals, perhaps using a pragma.
+  * Then only, the ranging info can be used by programs which traverse the ast, to prune away the parts which are not relevant.
+
 Notes 2014-02-25
 ================
 * IntToken -> Token thing, it's really weird to wrap around. The composition of
