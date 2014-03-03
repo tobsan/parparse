@@ -1,26 +1,27 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances,
-UndecidableInstances, DataKinds #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleInstances, UndecidableInstances, DataKinds #-}
 
 module Measuring where
 
 import Data.FingerTree (Measured, measure)
 import Data.Monoid
+import System.IO.Unsafe
+import System.Random
 
-import Java hiding (One)
-import CnfTablesJava
+import LexJavaletteLight hiding (One)
+import CnfTablesJavaletteLight
 import Data.Matrix.Quad
 import Algebra.RingUtils
 
--- 
--- Should it be Mat x y or SomeTri? SomeTri seems more reasonable in a way. 
--- 
-
 instance Monoid (SomeTri a) where
-    mempty = Zero
-    t0 `mappend` t1 = \b -> merge b t0 t1
+    mempty = T Leaf' (Zero :/: Zero)
+    t0 `mappend` t1 = merge True t0 t1
+    -- FIXME: Change to (unsafePerformIO randomIO)
 
 instance Measured (SomeTri IntToken) IntToken where
-    measure tok = One tok
+    -- Note: place the token just above the diagonal
+    measure tok = T s (q :/: q)
+      where s = Bin' 0 Leaf' Leaf'
+            q = Quad Zero (One tok) Zero Zero
 
 -- This is the progress:
 -- Lexer input is Char, measured to IntToken
