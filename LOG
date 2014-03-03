@@ -1,6 +1,11 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+Notes before supervision 2014-03-03
+===================================
+* Is it reasonable to have the possibility to use LexGen code in BNFC without
+  having to use an incremental parser? It would be a nice bonus, in that case.
+
 Notes 2014-02-25
 ================
 * IntToken -> Token thing, it's really weird to wrap around. The composition of
