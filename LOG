@@ -13,6 +13,11 @@ Ideas for keeping track of sizes:
   * Later, this ranging info can be put into bnfc nonterminals, perhaps using a pragma.
   * Then only, the ranging info can be used by programs which traverse the ast, to prune away the parts which are not relevant.
 
+Notes before supervision 2014-03-03
+===================================
+* Is it reasonable to have the possibility to use LexGen code in BNFC without
+  having to use an incremental parser? It would be a nice bonus, in that case.
+
 Notes 2014-02-25
 ================
 * IntToken -> Token thing, it's really weird to wrap around. The composition of
