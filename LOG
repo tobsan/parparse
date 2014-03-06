@@ -1,17 +1,34 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-06
+==========
+* After further investigation, it seems that the conversion from IntToken to
+  Token has to be done before any parsing is done, since cnftables is based on
+  Tokens, and not half-tokens (IntToken). This will most likely be a problem,
+  and should prove interesting. Note to self: spend friday making sure you
+  understand how the merging of IntToken tables is done. Perhaps one could have
+  IntToken until an accept for a Token is found in the merge? But then the
+  measure has to be something like Either IntToken Token I suppose.
+
+* Measure instance is trivial though, as will the template be once the above
+  mentioned issue is resolved.
+
 2014-03-03
 
 TODO:
   * Finish the "template"
   * Write the measure instance from IntToks to SomeTri
-    * The boolean flag should be picked by using unsafePerformIO . random, but for now it can be constant.
+    * The boolean flag should be picked by using unsafePerformIO . random, 
+      but for now it can be constant.
 
 Ideas for keeping track of sizes:
-  * Write a ringP instance for (category,Any,Range), where range in a range of the input, measured in characters.
-  * Later, this ranging info can be put into bnfc nonterminals, perhaps using a pragma.
-  * Then only, the ranging info can be used by programs which traverse the ast, to prune away the parts which are not relevant.
+  * Write a ringP instance for (category,Any,Range), where range in a range of
+    the input, measured in characters.
+  * Later, this ranging info can be put into bnfc nonterminals, 
+    perhaps using a pragma.
+  * Then only, the ranging info can be used by programs which traverse the ast,
+    to prune away the parts which are not relevant.
 
 Notes before supervision 2014-03-03
 ===================================
