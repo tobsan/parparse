@@ -23,9 +23,15 @@ instance Measured (SomeTri IntToken) IntToken where
       where s = Bin' 0 Leaf' Leaf'
             q = Quad Zero (One tok) Zero Zero
 
+intToToken :: IntToken -> Maybe Token
+intToToken (Token lex acc) = case accs of
+    AlexNone    -> Nothing
+    AlexAccSkip -> Nothing
+    AlexAcc f   -> f (Pn 0 1 1) lex -- dummy position for now
+
 -- This is the progress:
 -- Lexer input is Char, measured to IntToken
--- IntToken has to be converted into Tokens
+-- IntToken has to be converted into Tokens - HOW?
 -- 
 -- Tokens is the input to CnfTables, which can convert them to a Pair of
 -- category and AST-ADT.
