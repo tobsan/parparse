@@ -12,22 +12,31 @@ import CnfTablesJavaletteLight
 import Data.Matrix.Quad
 import Algebra.RingUtils
 
-instance Monoid (SomeTri a) where
+-- 
+-- TODO: Change Token to [(Category,Any)] or something along those lines. 
+--
+
+instance Monoid (SomeTri Token) where
     mempty = T Leaf' (Zero :/: Zero)
     t0 `mappend` t1 = merge True t0 t1
     -- FIXME: Change to (unsafePerformIO randomIO)
 
-instance Measured (SomeTri IntToken) IntToken where
+instance Measured (SomeTri Token) IntToken where
     -- Note: place the token just above the diagonal
     measure tok = T s (q :/: q)
       where s = Bin' 0 Leaf' Leaf'
-            q = Quad Zero (One tok) Zero Zero
+            q = quad Zero t Zero Zero
+            t = case intToToken tok of
+                Nothing  -> Zero
+                Just tok -> One tok
+
 
 intToToken :: IntToken -> Maybe Token
-intToToken (Token lex acc) = case accs of
-    AlexNone    -> Nothing
+intToToken (Token lex acc) = case acc of
+    AlexAccNone -> Nothing
     AlexAccSkip -> Nothing
-    AlexAcc f   -> f (Pn 0 1 1) lex -- dummy position for now
+    AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position for now
+
 
 -- This is the progress:
 -- Lexer input is Char, measured to IntToken

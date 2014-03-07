@@ -1,6 +1,14 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-07
+==========
+* It seems that, by looking at measureToTokens, tokens that have no meaning are
+  simply discarded (AlexAccNone and AlexAccSkip). Hence it is easy to just write
+  IntToken -> Maybe Token (with a dummy line position) and base conversion into
+  Category and later SomeTri on those. This sure feels weird though, and might
+  be too easy.
+
 2014-03-06
 ==========
 * After further investigation, it seems that the conversion from IntToken to
@@ -15,6 +23,7 @@ Log of progress, meetings, but also random thoughts.
   mentioned issue is resolved.
 
 2014-03-03
+==========
 
 TODO:
   * Finish the "template"
