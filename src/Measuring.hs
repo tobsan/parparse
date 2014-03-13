@@ -25,6 +25,7 @@ instance Monoid (SomeTri [(CATEGORY,Any)]) where
     t0 `mappend` t1 = merge True t0 t1
 
 instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
+    -- FIXME: Replace with square2 from Quad.hs
     -- Note: place the token just above the diagonal
     measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
       where 
@@ -45,29 +46,38 @@ type LexState = (Table State (Tokens ParseState),Size)
 type ParseState = SomeTri [(CATEGORY,Any)]
 type Result = [(Int,[(CATEGORY,Any)],Int)]
 
-showResults :: [(CATEGORY,Any)] -> IO ()
-showResults x = do
-    forM_ x $ \(cat,ast) -> do
-      putStrLn $ describe cat
-      putStrLn $ toAst (cat,ast)
+showResults :: (Int,[(CATEGORY,Any)],Int) -> IO ()
+showResults (px,x,py) = do
+    let xs = nub $ map toAst x
+    mapM_ putStrLn xs
     putStrLn $ show (length x) ++ " results"
 
 -- Slightly modified from CnfTables
+toAst :: (CATEGORY,Any) -> String
 toAst (cat,ast) = case cat of 
       CAT_Prog -> show $ ((unsafeCoerce# ast)::Prog)
       CAT_Stm -> show $ ((unsafeCoerce# ast)::Stm)
       CAT_Exp -> show $ ((unsafeCoerce# ast)::Exp)
       CAT_Typ -> show $ ((unsafeCoerce# ast)::Typ)
+      _       -> describe cat
 
 test :: FilePath -> IO ()
 test filename = do
     file <- readFile filename
-    let res = runTest $ makeTree file
+    let tri = getTri $ makeTree file
+        res = runTest tri
+        fing = fingerprint tri
+    mapM_ putStrLn fing
     case res of -- borrowed from TestProgram.hs
-        [(_,x,_)] -> showResults x
-        _         -> print "nope :("
+        [] -> print "No results!"
+        xs -> mapM_ showResults xs
+--
+--        [(px,x,py)]  -> showResults x
+--        ((_,x,_):xs) -> showResults x
   where
-    runTest :: FingerTree LexState Char -> Result
-    runTest tree = results $ measure $ stateToTree $ fst $ measure tree
+    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
+    getTri tree = measure $ stateToTree $ fst $ measure tree
+    runTest :: SomeTri [(CATEGORY,Any)] -> Result
+    runTest tri = results tri
 
 

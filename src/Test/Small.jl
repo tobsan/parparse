@@ -8,10 +8,10 @@ int main() {
         x = x * x;
         p = p + 1;
     }
-    int s;
     int t;
-    t = 10 * 2;
+    int s;
     s = 1;
+    t = 10 * 2;
     while(s < t) {
         s = s+2;
         t = t+1;
