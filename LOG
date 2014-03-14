@@ -1,6 +1,15 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-14
+==========
+* Check the CNF grammar. Bad performance could be due to rule conversion being
+  weird.
+* Bug in XPM files is probably a bug in the new code, since it used to work with
+  the general CNF parser.
+* Bad performance could have something to do with the oracle forcing computation
+  of all subtrees.
+
 2014-03-07
 ==========
 * It seems that, by looking at measureToTokens, tokens that have no meaning are
