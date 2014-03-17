@@ -8,7 +8,7 @@ import GHC.Prim
 import GHC.Exts
 import Data.FingerTree (Measured, measure)
 import Data.Monoid hiding (Any)
-import Control.Monad (forM_)
+import Control.Monad (forM_, replicateM)
 import System.IO.Unsafe
 import System.Random
 
@@ -16,6 +16,7 @@ import AbsJavaletteLight
 import LexJavaletteLight hiding (One)
 import CnfTablesJavaletteLight
 import Data.Matrix.Quad
+import Parsing.Chart hiding (fingerprint)
 import Algebra.RingUtils
 import Data.FingerTree
 import Data.List (nub)
@@ -27,7 +28,6 @@ instance Monoid (SomeTri [(CATEGORY,Any)]) where
       return $ merge b t0 t1
 
 instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
-    -- FIXME: Replace with square2 from Quad.hs
     -- Note: place the token just above the diagonal
     measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
       where 
@@ -63,25 +63,32 @@ toAst (cat,ast) = case cat of
       CAT_Typ -> show $ ((unsafeCoerce# ast)::Typ)
       _       -> describe cat
 
+testMany :: FilePath -> IO ()
+testMany filename = do 
+    sizes <- replicateM 100 (do
+        file <- readFile filename
+        let tri = measure $ stateToTree $ fst $ measure $ makeTree file
+            res = results tri
+            mid (a,b,c) = b
+        return $ length $ mid $ head $ res)
+    print sizes
+    print $ Prelude.sum sizes `div` 100
+
 test :: FilePath -> IO ()
 test filename = do
     file <- readFile filename
     let tri = getTri $ makeTree file
-        res = runTest tri
+        res = results tri
         fing = fingerprint tri
     case tri of
       T s _ -> print s
     mapM_ putStrLn fing
+    writeFile (filename ++ ".xpm") $ genXPM fing
     case res of -- borrowed from TestProgram.hs
         [] -> print "No results!"
         xs -> mapM_ showResults xs
---
---        [(px,x,py)]  -> showResults x
---        ((_,x,_):xs) -> showResults x
   where
     getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
     getTri tree = measure $ stateToTree $ fst $ measure tree
-    runTest :: SomeTri [(CATEGORY,Any)] -> Result
-    runTest tri = results tri
 
 
