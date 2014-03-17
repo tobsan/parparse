@@ -22,7 +22,9 @@ import Data.List (nub)
 
 instance Monoid (SomeTri [(CATEGORY,Any)]) where
     mempty = T Leaf' (Zero :/: Zero)
-    t0 `mappend` t1 = merge True t0 t1
+    t0 `mappend` t1 = unsafePerformIO $ do
+      b <- randomIO
+      return $ merge b t0 t1
 
 instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
     -- FIXME: Replace with square2 from Quad.hs
@@ -67,6 +69,8 @@ test filename = do
     let tri = getTri $ makeTree file
         res = runTest tri
         fing = fingerprint tri
+    case tri of
+      T s _ -> print s
     mapM_ putStrLn fing
     case res of -- borrowed from TestProgram.hs
         [] -> print "No results!"
