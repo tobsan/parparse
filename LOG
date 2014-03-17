@@ -1,6 +1,21 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-17, after supervision
+=============================
+* chopLast is not needed since we only have to chop the first row of the second
+  matrix (the first col is only zero anyway). 
+* Having the merge call in mappend placed within unsafePerformIO makes sure that
+  the random call is evaluated each time, since the call is now dependent on the
+  parameters being merged.
+* For performance: use the delimiters directive in BNF grammars (see updated
+  Javalette.cf in Test/ and the C.cf in BNFC.
+* Testing time! Parse two code fragments separately and then merge them.
+* Until next supervision: outline of report should be done.
+* There could be a bug in the code for finding Paths and rightMostOnLine, since
+  we are getting a VERY large number of results (i.e. ambiguities) for even a
+  small code piece (256 for Small.jl).
+
 2014-03-14
 ==========
 * Check the CNF grammar. Bad performance could be due to rule conversion being
