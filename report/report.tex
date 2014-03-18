@@ -1,15 +1,21 @@
-\documentclass[a4paper,12pt]{report}
+\documentclass[a4paper,12pt,twosided]{report}
 \usepackage[utf8]{inputenc}
+\usepackage{datetime}
+\usepackage[pdftex]{graphicx}
+\usepackage{epstopdf}
+
+\newdateformat{monthdate}{\monthname[\THEMONTH] \THEYEAR}
 
 \begin{document}
 
-\include{titlepage.tex}
-\include{abstract.tex}
+\include{titlepage}
+\include{abstract}
 
-\include{background.tex}
-\include{implementation.tex}
-\include{results.tex}
-\include{discussion.tex}
+\include{background}
+\include{project}
+\include{implementation}
+\include{results}
+\include{discussion}
 
 \bibliographystyle{plain}
 \bibliography{bibliography.bib}
