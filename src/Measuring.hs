@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances, GADTs, UndecidableInstances, DataKinds #-}
 {-# LANGUAGE MagicHash #-}
 
-module Measuring where
+module Main where
 
 import GHC.Prim
 import GHC.Exts
@@ -11,6 +11,7 @@ import Data.Monoid hiding (Any)
 import Control.Monad (forM_, replicateM)
 import System.IO.Unsafe
 import System.Random
+import System.Environment
 
 import AbsJavaletteLight
 import LexJavaletteLight hiding (One)
@@ -35,7 +36,7 @@ instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
         select b = if b then leftOf else rightOf
         t b = case intToToken tok of
             Nothing  -> Zero
-            Just tok -> One $ (select b) $ tokenToCats b tok
+            Just tok -> one $ (select b) $ tokenToCats b tok
 
 -- None and Skip are just discarded, as seen in measureToTokens in LexGen
 intToToken :: IntToken -> Maybe Token
@@ -49,10 +50,13 @@ type ParseState = SomeTri [(CATEGORY,Any)]
 type Result = [(Int,[(CATEGORY,Any)],Int)]
 
 showResults :: (Int,[(CATEGORY,Any)],Int) -> IO ()
-showResults (px,x,py) = do
-    let xs = nub $ map toAst x
-    mapM_ putStrLn xs
-    putStrLn $ show (length x) ++ " results"
+showResults (px,xs,py) = do
+    let x = nub $ map toAst xs
+    forM_ x $ \r -> do
+        putStrLn "Result: "
+        putStrLn r
+    putStrLn $ "Total number of results: " ++ (show $ length xs) ++ ", but only " ++ (show $ length x) ++ " unique results"
+    putStrLn "*************"
 
 -- Slightly modified from CnfTables
 toAst :: (CATEGORY,Any) -> String
@@ -74,6 +78,8 @@ testMany filename = do
     print sizes
     print $ Prelude.sum sizes `div` 100
 
+main = getArgs >>= \[filename] -> test filename
+
 test :: FilePath -> IO ()
 test filename = do
     file <- readFile filename
@@ -86,7 +92,10 @@ test filename = do
     writeFile (filename ++ ".xpm") $ genXPM fing
     case res of -- borrowed from TestProgram.hs
         [] -> print "No results!"
-        xs -> mapM_ showResults xs
+        xs -> do
+            putStrLn "Showing parses:"
+            mapM_ showResults xs
+            putStrLn $ "Total number of parses: " ++ (show $ length xs)
   where
     getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
     getTri tree = measure $ stateToTree $ fst $ measure tree
