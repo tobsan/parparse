@@ -1,5 +1,9 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
+* It is important to use one/row/quad instead of One/Row/Quad because of Zero
+  optimisation. Lesson learned the hard way.
+* Implement generation of parser in BNFC next step?
+* Still: testing time!
 
 2014-03-17, after supervision
 =============================
