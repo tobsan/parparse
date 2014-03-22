@@ -4,32 +4,85 @@
 
 module Main where
 
-import GHC.Prim
+import GHC.Prim (Any)
 import GHC.Exts
-import Data.FingerTree (Measured, measure)
 import Data.Monoid hiding (Any)
-import Control.Monad (forM_, replicateM)
-import System.IO.Unsafe
-import System.Random
+import System.IO.Unsafe (unsafePerformIO)
+import System.Random (randomIO)
 import System.Environment
+import Control.Applicative
+import Control.Monad
 
-import AbsJavaletteLight
-import LexJavaletteLight hiding (One)
-import CnfTablesJavaletteLight
 import Data.Matrix.Quad
 import Parsing.Chart hiding (fingerprint)
 import Algebra.RingUtils
 import Data.FingerTree
-import Data.List (nub)
 
-instance Monoid (SomeTri [(CATEGORY,Any)]) where
+import AbsJavaletteLight
+import LexJavaletteLight hiding (One)
+import CnfTablesJavaletteLight
+
+type LexState = (Table State (Tokens ParseState),Size)
+type ParseState = SomeTri [(CATEGORY,Any)]
+type Result = [(Int,[(CATEGORY,Any)],Int)]
+
+-- For testing having range embedded
+type ExtendedLexState = (Table State (Tokens ExtendedState),Size)
+type ExtendedState = SomeTri [(CATEGORY,Any,Range)]
+
+instance Monoid ExtendedState where
+    mempty = T Leaf' (Zero :/: Zero)
+    t0 `mappend` t1 = unsafePerformIO $ do
+        b <- randomIO
+        return $ merge b t0 t1
+
+instance Measured ExtendedState IntToken where
+    measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
+      where
+        q b = quad Zero (t b) Zero Zero
+        select b = if b then leftOf else rightOf
+        t b = case intToToken tok of
+            Nothing  -> Zero
+            Just tok -> let cats = select b $ tokenToCats b tok
+                        in one $ map (\(c,a) -> (c,a,Nil)) cats
+                        -- Nil is just a dummy size
+
+data Range = Nil | Branch Range Range
+range :: Range -> Int
+range Nil = 1
+range (Branch r1 r2) = range r1 Prelude.+ range r2
+
+instance Monoid Range where
+    mempty = Nil
+    mappend r1 r2 = Branch r1 r2
+
+instance RingP [(CATEGORY,Any,Range)] where 
+    -- Modified from CNFTables module
+    mul p a b = trav [map (app tx ty rx ry) l :/: 
+                      map (app tx ty rx ry) r
+                     | (x,tx,rx) <- a, (y,ty,ry) <- b
+                     , let l :/: r = combine p x y]
+      where 
+        trav :: [Pair [a]] -> Pair [a]
+        trav [] = pure []
+        trav (x:xs) = (++) <$> x <*> trav xs
+        app tx ty rx ry (c,f) = (c, f tx ty, rx <> ry)
+
+-- None and Skip are just discarded, as seen in measureToTokens in LexGen
+intToToken :: IntToken -> Maybe Token
+intToToken (Token lex acc) = case acc of
+    AlexAccNone -> Nothing
+    AlexAccSkip -> Nothing
+    AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position
+
+{-
+instance Monoid ParseState where
     mempty = T Leaf' (Zero :/: Zero)
     t0 `mappend` t1 = unsafePerformIO $ do
       b <- randomIO
       return $ merge b t0 t1
 
-instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
-    -- Note: place the token just above the diagonal
+instance Measured ParseState IntToken where
     measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
       where 
         q b = quad Zero (t b) Zero Zero
@@ -38,27 +91,7 @@ instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
             Nothing  -> Zero
             Just tok -> one $ (select b) $ tokenToCats b tok
 
--- None and Skip are just discarded, as seen in measureToTokens in LexGen
-intToToken :: IntToken -> Maybe Token
-intToToken (Token lex acc) = case acc of
-    AlexAccNone -> Nothing
-    AlexAccSkip -> Nothing
-    AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position for now
-
-type LexState = (Table State (Tokens ParseState),Size)
-type ParseState = SomeTri [(CATEGORY,Any)]
-type Result = [(Int,[(CATEGORY,Any)],Int)]
-
-showResults :: (Int,[(CATEGORY,Any)],Int) -> IO ()
-showResults (px,xs,py) = do
-    let x = nub $ map toAst xs
-    forM_ x $ \r -> do
-        putStrLn "Result: "
-        putStrLn r
-    putStrLn $ "Total number of results: " ++ (show $ length xs) ++ ", but only " ++ (show $ length x) ++ " unique results"
-    putStrLn "*************"
-
--- Slightly modified from CnfTables
+-}
 toAst :: (CATEGORY,Any) -> String
 toAst (cat,ast) = case cat of 
       CAT_Prog -> show $ ((unsafeCoerce# ast)::Prog)
@@ -67,17 +100,7 @@ toAst (cat,ast) = case cat of
       CAT_Typ -> show $ ((unsafeCoerce# ast)::Typ)
       _       -> describe cat
 
-testMany :: FilePath -> IO ()
-testMany filename = do 
-    sizes <- replicateM 100 (do
-        file <- readFile filename
-        let tri = measure $ stateToTree $ fst $ measure $ makeTree file
-            res = results tri
-            mid (a,b,c) = b
-        return $ length $ mid $ head $ res)
-    print sizes
-    print $ Prelude.sum sizes `div` 100
-
+main :: IO ()
 main = getArgs >>= \[filename] -> test filename
 
 test :: FilePath -> IO ()
@@ -86,18 +109,11 @@ test filename = do
     let tri = getTri $ makeTree file
         res = results tri
         fing = fingerprint tri
-    case tri of
-      T s _ -> print s
     mapM_ putStrLn fing
     writeFile (filename ++ ".xpm") $ genXPM fing
-    case res of -- borrowed from TestProgram.hs
-        [] -> print "No results!"
-        xs -> do
-            putStrLn "Showing parses:"
-            mapM_ showResults xs
-            putStrLn $ "Total number of parses: " ++ (show $ length xs)
+    forM_ res $ \(_,x,_) -> let (cat,ast,sz) = head x
+                            in putStrLn $ toAst (cat,ast)
   where
-    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
+    getTri :: FingerTree ExtendedLexState Char -> ExtendedState
     getTri tree = measure $ stateToTree $ fst $ measure tree
-
 
