@@ -24,28 +24,37 @@ import CnfTablesJavaletteLight
 
 type LexState = (Table State (Tokens ParseState),Size)
 type ParseState = SomeTri [(CATEGORY,Any)]
-type Result = [(Int,[(CATEGORY,Any)],Int)]
 
 -- For testing having range embedded
 type ExtendedLexState = (Table State (Tokens ExtendedState),Size)
 type ExtendedState = SomeTri [(CATEGORY,Any,Range)]
 
-instance Monoid ExtendedState where
+-- Generic instance for upper-triangular matrices
+instance RingP a => Monoid (SomeTri a) where
     mempty = T Leaf' (Zero :/: Zero)
     t0 `mappend` t1 = unsafePerformIO $ do
         b <- randomIO
         return $ merge b t0 t1
 
-instance Measured ExtendedState IntToken where
+instance Measured ParseState IntToken where
     measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
-      where
+      where 
         q b = quad Zero (t b) Zero Zero
         select b = if b then leftOf else rightOf
         t b = case intToToken tok of
             Nothing  -> Zero
-            Just tok -> let cats = select b $ tokenToCats b tok
-                        in one $ map (\(c,a) -> (c,a,Nil)) cats
-                        -- Nil is just a dummy size
+            Just tok -> one $ select b $ tokenToCats b tok
+
+--instance Measured ExtendedState IntToken where
+--    measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
+--      where
+--        q b = quad Zero (t b) Zero Zero
+--        select b = if b then leftOf else rightOf
+--        t b = case intToToken tok of
+--            Nothing  -> Zero
+--            Just tok -> let cats = select b $ tokenToCats b tok
+--                        in one $ map (\(c,a) -> (c,a,Nil)) cats
+--                        -- Nil is just a dummy size
 
 data Range = Nil | Branch Range Range
 range :: Range -> Int
@@ -75,23 +84,6 @@ intToToken (Token lex acc) = case acc of
     AlexAccSkip -> Nothing
     AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position
 
-{-
-instance Monoid ParseState where
-    mempty = T Leaf' (Zero :/: Zero)
-    t0 `mappend` t1 = unsafePerformIO $ do
-      b <- randomIO
-      return $ merge b t0 t1
-
-instance Measured ParseState IntToken where
-    measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
-      where 
-        q b = quad Zero (t b) Zero Zero
-        select b = if b then leftOf else rightOf
-        t b = case intToToken tok of
-            Nothing  -> Zero
-            Just tok -> one $ (select b) $ tokenToCats b tok
-
--}
 toAst :: (CATEGORY,Any) -> String
 toAst (cat,ast) = case cat of 
       CAT_Prog -> show $ ((unsafeCoerce# ast)::Prog)
@@ -110,10 +102,9 @@ test filename = do
         res = results tri
         fing = fingerprint tri
     mapM_ putStrLn fing
-    writeFile (filename ++ ".xpm") $ genXPM fing
-    forM_ res $ \(_,x,_) -> let (cat,ast,sz) = head x
-                            in putStrLn $ toAst (cat,ast)
+--    writeFile (filename ++ ".xpm") $ genXPM fing
+    forM_ res $ \(_,x,_) -> mapM_ (putStrLn . toAst) x
   where
-    getTri :: FingerTree ExtendedLexState Char -> ExtendedState
+    getTri :: FingerTree LexState Char -> ParseState
     getTri tree = measure $ stateToTree $ fst $ measure tree
 
