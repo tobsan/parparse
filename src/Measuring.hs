@@ -1,6 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances, GADTs, UndecidableInstances, DataKinds #-}
-{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, MagicHash #-}
 
 module Main where
 
@@ -42,8 +40,8 @@ instance Measured ParseState IntToken where
         q b = quad Zero (t b) Zero Zero
         select b = if b then leftOf else rightOf
         t b = case intToToken tok of
-            Nothing  -> Zero
-            Just tok -> one $ select b $ tokenToCats b tok
+            Nothing    -> Zero
+            Just token -> one $ select b $ tokenToCats b token
 
 --instance Measured ExtendedState IntToken where
 --    measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
@@ -54,7 +52,6 @@ instance Measured ParseState IntToken where
 --            Nothing  -> Zero
 --            Just tok -> let cats = select b $ tokenToCats b tok
 --                        in one $ map (\(c,a) -> (c,a,Nil)) cats
---                        -- Nil is just a dummy size
 
 data Range = Nil | Branch Range Range
 range :: Range -> Int
