@@ -40,8 +40,8 @@ instance Measured ParseState IntToken where
         q b = quad Zero (t b) Zero Zero
         select b = if b then leftOf else rightOf
         t b = case intToToken tok of
-            Nothing    -> Zero
-            Just token -> one $ select b $ tokenToCats b token
+            Nothing    -> zero
+            Just token -> One $ select b $ tokenToCats b token
 
 --instance Measured ExtendedState IntToken where
 --    measure tok = T (Bin' 0 Leaf' Leaf') (q True :/: q False)
@@ -100,7 +100,9 @@ test filename = do
         fing = fingerprint tri
     mapM_ putStrLn fing
 --    writeFile (filename ++ ".xpm") $ genXPM fing
-    forM_ res $ \(_,x,_) -> mapM_ (putStrLn . toAst) x
+    forM_ res $ \(_,x,_) -> do
+        putStrLn $ toAst $ head x
+        putStrLn $ show $ length x
   where
     getTri :: FingerTree LexState Char -> ParseState
     getTri tree = measure $ stateToTree $ fst $ measure tree
