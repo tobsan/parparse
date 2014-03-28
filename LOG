@@ -1,5 +1,14 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
+
+2014-03-28
+==========
+* Still there are too many branches in the parse results, for reasons unknown.
+    - Could it be too many/too few calls to mul?
+    - Could it be something in the chopping? But that shouldn't matter AT ALL!
+
+
+===========
 * It is important to use one/row/quad instead of One/Row/Quad because of Zero
   optimisation. Lesson learned the hard way.
 * Implement generation of parser in BNFC next step?
