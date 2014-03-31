@@ -1,6 +1,17 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-03-31, after supervision
+============================
+* Problem with many results was due to the chopped row being part of the closure
+  (of itself), which led to some stuff ending up both on the left and the right
+  hand side. Solution: only keep the leftmost element on that row. This leads to
+  the other elements being re-computed, so this is not the best solution.
+* The division of pair/mat-functions is now done already from "merge". This is
+  consistent with the division I did for chopFirst and chopFirstRow before.
+* Next week: discussion about the report
+* After easter: JP on vacation, so no supervision for two weeks.
+
 2014-03-28
 ==========
 * Still there are too many branches in the parse results, for reasons unknown.

@@ -28,7 +28,20 @@ instance RingP a => Monoid (SomeTri a) where
       b <- randomIO
       return $ merge b t0 t1
 
+instance Measured (SomeTri [(CATEGORY,Any,Range)]) IntToken where
+    -- Note: place the token just above the diagonal
+    measure tok = T (bin' Leaf' Leaf') (q True :/: q False)
+      where q b = quad zero (t b) zero zero
+            select b = if b then leftOf else rightOf
+            t b = case intToToken tok of
+                    Nothing    -> Zero
+                    Just token -> 
+                        let cats = select b $ tokenToCats b token
+                        in One $ map (\(c,a) -> (c,a, Nil)) cats
+
 data Range = Nil | Branch Range Range
+    deriving Show
+
 range :: Range -> Int
 range Nil = 1
 range (Branch r1 r2) = range r1 Prelude.+ range r2
@@ -49,12 +62,6 @@ instance RingP [(CATEGORY,Any,Range)] where
         trav (x:xs) = (++) <$> x <*> trav xs
         app tx ty rx ry (c,f) = (c, f tx ty, rx <> ry)
 
-instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
-    -- Note: place the token just above the diagonal
-    measure tok = 
-        let t = maybe zero (fmap One . tokenToCats True) $ intToToken tok
-        in T (Bin' 0 Leaf' Leaf') (quad' zero t zero zero)
-
 -- None and Skip are just discarded, as seen in measureToTokens in LexGen
 intToToken :: IntToken -> Maybe Token
 intToToken (Token lex acc) = case acc of
@@ -63,21 +70,21 @@ intToToken (Token lex acc) = case acc of
     AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position for now
 
 type LexState = (Table State (Tokens ParseState),Size)
-type ParseState = SomeTri [(CATEGORY,Any)]
+type ParseState = SomeTri [(CATEGORY,Any,Range)]
 type Result = [(Int,[(CATEGORY,Any)],Int)]
 
-showResults :: (Int,[(CATEGORY,Any)],Int) -> IO ()
-showResults (px,xs,py) = do
-    let x = nub $ map toAst xs
-    forM_ x $ \r -> do
-        putStrLn "Result: "
-        putStrLn r
-    putStrLn $ "Total number of results: " ++ (show $ length xs) ++ ", but only " ++ (show $ length x) ++ " unique results"
-    putStrLn "*************"
+--showResults :: (Int,[(CATEGORY,Any,Range)],Int) -> IO ()
+--showResults (px,xs,py) = do
+--    let x = nub $ map toAst xs
+--    forM_ x $ \r -> do
+--        putStrLn "Result: "
+--        putStrLn r
+--    putStrLn $ "Total number of results: " ++ (show $ length xs) ++ ", but only " ++ (show $ length x) ++ " unique results"
+--    putStrLn "*************"
 
 -- Slightly modified from CnfTables
-toAst :: (CATEGORY,Any) -> String
-toAst (cat,ast) = case cat of 
+toAst :: (CATEGORY,Any,Range) -> String
+toAst (cat,ast,_) = case cat of 
       CAT_Prog -> show $ ((unsafeCoerce# ast)::Prog)
       CAT_Stm -> show $ ((unsafeCoerce# ast)::Stm)
       CAT_Exp -> show $ ((unsafeCoerce# ast)::Exp)
@@ -95,13 +102,9 @@ test filename = do
     mapM_ putStrLn fing
     -- writeFile (filename ++ ".xpm") $ genXPM fing
     case res of -- borrowed from TestProgram.hs
-        [] -> print "No results!"
-        xs -> do
-            putStrLn "Showing parses:"
-            mapM_ showResults xs
-            putStrLn $ "Total number of parses: " ++ (show $ length xs)
+        [(_,[x],_)] -> putStrLn $ toAst x
+        _           -> print "Something is wrong"
   where
-    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
+    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any,Range)]
     getTri tree = measure $ stateToTree $ fst $ measure tree
-
 
