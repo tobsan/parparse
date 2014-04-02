@@ -1,5 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, MagicHash #-}
 
+--
+--
+--
 module Main where
 
 import GHC.Prim
@@ -11,16 +14,34 @@ import System.Random
 import System.Environment
 
 import Control.Applicative
+import Prelude as P
 
 import Data.Matrix.Quad
 import Parsing.Chart hiding (fingerprint)
 import Algebra.RingUtils
 import Data.FingerTree
-import Data.List (nub)
+import qualified Data.Foldable as F
+import qualified Data.Sequence as S
 
 import AbsJavaletteLight
 import LexJavaletteLight hiding (One)
 import CnfTablesJavaletteLight
+
+-- | Lex some (sub)fingertree into another fingertree that can be measured into
+-- an abstract syntax tree. 
+lex :: FingerTree LexState Char -> FingerTree ParseState IntToken
+lex tree = stateToTree $ measure tree
+-- lex tree = stateToTree $ fst $ measure tree
+
+-- TODO: How to solve grammars with multiple entrypoints?
+parse :: FingerTree ParseState IntToken -> Maybe Prog
+parse tree = case results $ measure tree of
+    [(_,[(cat,ast,r)],_)] -> unsafeCoerce# ast
+    _                     -> Nothing
+
+type LexState = (Table State (Tokens ParseState),Size)
+type ParseState = SomeTri [(CATEGORY,Any,Range)]
+type Result = [(Int,[(CATEGORY,Any)],Int)]
 
 instance RingP a => Monoid (SomeTri a) where
     mempty = T Leaf' (Zero :/: Zero)
@@ -28,29 +49,33 @@ instance RingP a => Monoid (SomeTri a) where
       b <- randomIO
       return $ merge b t0 t1
 
+data Range = R (Int -> Int) (Int -> Int) (Int -> Int)
+runRange :: Range -> Int -> Int -> Int -> (Int,Int,Int)
+runRange (R lf cf tf) l c t = (lf l, cf c, tf t)
+
+toRange :: Char -> Range
+toRange '\n' = R (P.+1) (const 0) (P.+1)
+toRange c    = R id (P.+1) (P.+1)
+
+instance Monoid Range where
+    mempty = R id id id
+    (R l1 c1 t1) `mappend` (R l2 c2 t2) = R (l2 . l1) (c2 . c1) (t2 . t1)
+
+-- | Measure (parse) some token
 instance Measured (SomeTri [(CATEGORY,Any,Range)]) IntToken where
     -- Note: place the token just above the diagonal
     measure tok = T (bin' Leaf' Leaf') (q True :/: q False)
       where q b = quad zero (t b) zero zero
             select b = if b then leftOf else rightOf
             t b = case intToToken tok of
-                    Nothing    -> Zero
-                    Just token -> 
-                        let cats = select b $ tokenToCats b token
-                        in One $ map (\(c,a) -> (c,a, Nil)) cats
+                Nothing    -> Zero
+                Just token -> 
+                    let cats = select b $ tokenToCats b token
+                        lrange = F.foldMap toRange (lexeme tok)
+                    in One $ map (\(c,a) -> (c,a,lrange)) cats
 
-data Range = Nil | Branch Range Range
-    deriving Show
-
-range :: Range -> Int
-range Nil = 1
-range (Branch r1 r2) = range r1 Prelude.+ range r2
-
-instance Monoid Range where
-    mempty = Nil
-    mappend r1 r2 = Branch r1 r2
-
-instance RingP [(CATEGORY,Any,Range)] where 
+-- r for Range
+instance Monoid r => RingP [(CATEGORY,Any,r)] where 
     -- Modified from CNFTables module
     mul p a b = trav [map (app tx ty rx ry) l :/: 
                       map (app tx ty rx ry) r
@@ -64,14 +89,9 @@ instance RingP [(CATEGORY,Any,Range)] where
 
 -- None and Skip are just discarded, as seen in measureToTokens in LexGen
 intToToken :: IntToken -> Maybe Token
-intToToken (Token lex acc) = case acc of
-    AlexAccNone -> Nothing
-    AlexAccSkip -> Nothing
-    AlexAcc f   -> Just $ f (Pn 0 1 1) lex -- dummy position for now
-
-type LexState = (Table State (Tokens ParseState),Size)
-type ParseState = SomeTri [(CATEGORY,Any,Range)]
-type Result = [(Int,[(CATEGORY,Any)],Int)]
+intToToken (Token lexeme acc) = case acc of
+    AlexAcc f   -> Just $ f (Pn 0 1 1) lexeme -- dummy position for now
+    _           -> Nothing
 
 --showResults :: (Int,[(CATEGORY,Any,Range)],Int) -> IO ()
 --showResults (px,xs,py) = do
@@ -84,19 +104,21 @@ type Result = [(Int,[(CATEGORY,Any)],Int)]
 
 -- Slightly modified from CnfTables
 toAst :: (CATEGORY,Any,Range) -> String
-toAst (cat,ast,_) = case cat of 
-      CAT_Prog -> show $ ((unsafeCoerce# ast)::Prog)
+toAst (cat,ast,range) = case cat of 
+      CAT_Prog -> "Range: " ++ show (runRange range 1 0 0) ++ show ((unsafeCoerce# ast)::Prog)
       CAT_Stm -> show $ ((unsafeCoerce# ast)::Stm)
       CAT_Exp -> show $ ((unsafeCoerce# ast)::Exp)
       CAT_Typ -> show $ ((unsafeCoerce# ast)::Typ)
       _       -> describe cat
 
+main :: IO ()
 main = getArgs >>= \[filename] -> test filename
 
 test :: FilePath -> IO ()
 test filename = do
     file <- readFile filename
-    let tri = getTri $ makeTree file
+    let mes = measure $ makeTree file
+        tri = measure $ stateToTree mes
         res = results tri
         fing = fingerprint tri
     mapM_ putStrLn fing
@@ -106,5 +128,17 @@ test filename = do
         _           -> print "Something is wrong"
   where
     getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any,Range)]
-    getTri tree = measure $ stateToTree $ fst $ measure tree
+    getTri tree = measure $ stateToTree $ measure tree
 
+
+testSmall :: IO ()
+testSmall = do
+    cont <- readFile "Small.jl"
+    let tree = makeTree cont
+        smaller = takeUntil pred tree
+        ptree = stateToTree $ measure smaller
+    putStrLn $ show $ F.toList $ ptree
+  where pred (tab,range) = getSum range > 100
+
+instance Show IntToken where
+    show (Token lex acc) = F.foldr (:) "" lex
