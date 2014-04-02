@@ -1,5 +1,14 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
+2014-04-02
+==========
+* Range in RingP doesn't seem to work. Are \n etc really captured in their
+  respective tokens?
+* Range instead of Size in the measure instance in the lexer could be
+  problematic, since the (a,b) in a monoid can't affect the other part
+  of the tuple. Currently, whenever something is wrong, the Range information
+  denotes the end of the lexed string, and not the position of the error.
+* Perhaps the easiest way would be to let range be a part of the IntToken?
 
 2014-03-31, after supervision
 ============================
