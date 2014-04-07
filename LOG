@@ -1,5 +1,21 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
+
+2014-04-07, after supervision
+=============================
+* We want to annotate InvalidTokens constructor with position information
+* This can be done by newtype wrapper for (Tokens, Range), where mappend can
+  depend between the two parts of the tuple (to avoid problem of always getting
+  the last position at problems).
+* Prioritize measurements for now, otherwise we don't know if it's incremental
+  or even works as expected. Measure speed of concatenation.
+* Don't care about parse errors, it's a whole project in itself. 
+* Until next time: better outline of report
+* Until 5/5, good draft of report done. Send PDF before the meeting (no later
+  than the morning) and we will discuss it during supervision.
+* Don't forget to book presentation and defense in good time. Check the time
+  slots on the master thesis home page.
+
 2014-04-02
 ==========
 * Range in RingP doesn't seem to work. Are \n etc really captured in their
