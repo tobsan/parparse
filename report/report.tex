@@ -9,14 +9,112 @@
 \begin{document}
 
 \include{titlepage}
-\include{abstract}
 
-\include{background}
-\include{implementation}
-\include{results}
-\include{discussion}
+\begin{abstract}
+This is an abstract
+\end{abstract}
 
+\tableofcontents
+
+%
+% NEW CHAPTER
+%
+
+\chapter{Background}
+
+\section{Introduction}
+The topic of this thesis is to do \textbf{parsing} in an \textbf{incremental}
+fashion that can easily be parallelizable. To parse is a to check if some given
+input corresponds to a certain language's grammar, and in this case context-free
+programming languages' grammars.
+
+% What is the topic? Describe each word in the title.
+% Something like a motivation on why this is interesting at all.
+\subsection{Incrementality}
+Doing something incrementally means that one does it step by step, and not
+longer than neccessary.
+
+\subsection{Parallelism}
+\subsection{Parsing}
+\subsection{Motivation}
+In compilers, lexing and parsing are the two first phases. The output of these
+is an abstract syntax tree (AST) which is fed to the next phase of the compiler.
+But an AST could also provide useful feedback for programmers, already in their
+editor, if the code could be lexed and parsed fast enough. With a lexer and
+parser that is incremental and that can also be parallelized could real-time
+feedback in the form of an AST easily be provided to the programmer. Most
+current text editors give syntax feedback based on regular expressions, which
+does not yield any information about depth or the surrounding AST.
+
+\section{Lexing}
+Shortly describe LexGen and its relevance.
+
+\section{Context-free grammars}
+\subsection{Chomsky Normal Form}
+
+\section{Parsing}
+\subsection{CYK algorithm}
+\subsection{Improvement by Bernardy \& Claessen}
+
+\section{Dependently typed programming}
+What is dependently typed programming, and how can it be used in Haskell.
+\subsection{Kinds, Types and Values}
+
+%
+% NEW CHAPTER
+%
+
+\chapter{Implementation}
+
+\section{Finger trees}
+\section{Measuring and Monoids}
+\subsection{Pipeline of measures}
+An illustration would be good here
+
+\section{Lexing}
+\subsection{Position information}
+
+\section{Parsing}
+\subsection{BNFC}
+\subsection{Dependently typed programming with charts}
+\subsection{Oracle and unsafePerformIO}
+
+
+\section{Final product}
+\subsection{Testing}
+
+%
+% NEW CHAPTER
+%
+
+\chapter{Results}
+
+\section{Measurements}
+How fast is it? What is the complexity?
+
+%
+% NEW CHAPTER
+%
+\chapter{Discussion}
+
+% TODO: Describe this in some other way. 
+\section{Implementation}
+% Describe sort of chronologically?
+\subsection{Too many result branches}
+\subsection{LexGen -- Alex discrepancy}
+\subsection{Position information}
+
+\section{Improvements}
+\section{Future work}
+
+%
+% BIBLIOGRAPHY
+%
 \bibliographystyle{plain}
 \bibliography{bibliography.bib}
+
+%
+% ANY APPENDICES HERE
+%
 
 \end{document}
