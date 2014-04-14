@@ -1,7 +1,0 @@
-
-Where to find the entry point?
-- run bnfc --cnf
-- get TestCNF.hs
-- attention! it uses TestProgram.hs from the bnfc package
-- the source for TestProgram is in bnfc/source/runtime/Parsing/
-

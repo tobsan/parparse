@@ -1,6 +1,12 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-04-14, random notes
+========================
+* Use the Token data type, and change position to Range. IntToken will not be
+  needed then. 
+* Rewrite combineTokens to take range into account.
+
 2014-04-07, after supervision
 =============================
 * We want to annotate InvalidTokens constructor with position information
