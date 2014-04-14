@@ -25,17 +25,20 @@ This is an abstract
 \section{Introduction}
 The topic of this thesis is to do \textbf{parsing} in an \textbf{incremental}
 fashion that can easily be parallelizable. To parse is a to check if some given
-input corresponds to a certain language's grammar, and in this case context-free
-programming languages' grammars.
+input corresponds to a certain language's grammar, and in this thesis it will
+use \textbf{context-free grammars} for programming languages.
 
-% What is the topic? Describe each word in the title.
-% Something like a motivation on why this is interesting at all.
 \subsection{Incrementality}
 Doing something incrementally means that one does it step by step, and not
 longer than neccessary.
 
 \subsection{Parallelism}
+Why is parallelism interesting and how does it apply in this case?
+
 \subsection{Parsing}
+Describe parsing in some detail, but not too much. Perhaps this section can be
+skipped, parsing is described in more detail below.
+
 \subsection{Motivation}
 In compilers, lexing and parsing are the two first phases. The output of these
 is an abstract syntax tree (AST) which is fed to the next phase of the compiler.
@@ -47,10 +50,24 @@ current text editors give syntax feedback based on regular expressions, which
 does not yield any information about depth or the surrounding AST.
 
 \section{Lexing}
-Shortly describe LexGen and its relevance.
+* Describe what lexing is
+* Shortly describe LexGen and its relevance.
 
 \section{Context-free grammars}
+What are context-free grammars? Perhaps something about LBNF and BNFC?
+
 \subsection{Chomsky Normal Form}
+Chomsky Normal Form (CNF) is a subset of context-free grammars that was first
+described by linguist Noam Chomsky. Productions in CNF are restricted to the
+following forms:
+
+\begin{figure}
+% TODO: add caption etc 
+\begin{tabular}{l l l l}
+    A & $\rightarrow$ & BC & A variable, B and C productions \\
+    A & $\rightarrow$ & a & A variable, a nonterminal \\
+\end{tabular}
+\end{figure}
 
 \section{Parsing}
 \subsection{CYK algorithm}
@@ -59,6 +76,7 @@ Shortly describe LexGen and its relevance.
 \section{Dependently typed programming}
 What is dependently typed programming, and how can it be used in Haskell.
 \subsection{Kinds, Types and Values}
+Describe how kinds relate to types as types relate to values.
 
 %
 % NEW CHAPTER
@@ -67,7 +85,9 @@ What is dependently typed programming, and how can it be used in Haskell.
 \chapter{Implementation}
 
 \section{Finger trees}
+What are they?
 \section{Measuring and Monoids}
+
 \subsection{Pipeline of measures}
 An illustration would be good here
 
@@ -78,7 +98,6 @@ An illustration would be good here
 \subsection{BNFC}
 \subsection{Dependently typed programming with charts}
 \subsection{Oracle and unsafePerformIO}
-
 
 \section{Final product}
 \subsection{Testing}
@@ -97,12 +116,16 @@ How fast is it? What is the complexity?
 %
 \chapter{Discussion}
 
-% TODO: Describe this in some other way. 
 \section{Implementation}
 % Describe sort of chronologically?
-\subsection{Too many result branches}
 \subsection{LexGen -- Alex discrepancy}
+\subsection{Too many result branches}
+Describe the reason for this, with the merge stuff.
+
 \subsection{Position information}
+* Tuple of monoids?
+* RingP instance?
+* Newtype for tuples?
 
 \section{Improvements}
 \section{Future work}
