@@ -1,6 +1,20 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-04-14, after supervision
+=============================
+* Any merging of sections/parts of the report can be done later - just write the
+  stuff for now.
+* Say what you're going to say in the report!
+* Any stuff that you've learnt during this should be cited - unless it is
+  something that should be known by heart by any CS major.
+* Testing: Remember to use the delimiters clause in BNFC grammar for lists.
+* Testing: Make sure to have large enough parts to merge (like large while
+  clauses)
+* Measurements are more important than the positioning information! Do position
+  information if there is time later.
+* Remember to re-download JP:s paper from his homepage (long version)
+
 2014-04-14, random notes
 ========================
 * Use the Token data type, and change position to Range. IntToken will not be
