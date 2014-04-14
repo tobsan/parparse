@@ -24,9 +24,13 @@ This is an abstract
 
 \section{Introduction}
 The topic of this thesis is to do \textbf{parsing} in an \textbf{incremental}
-fashion that can easily be parallelizable. To parse is a to check if some given
-input corresponds to a certain language's grammar, and in this thesis it will
-use \textbf{context-free grammars} for programming languages.
+fashion that can easily be \textbf{parallelizable}, using a
+\textbf{divide-and-conquer approach}. In this section, I will give a brief
+explanation of the topics covered, and end with a motivation for why this is
+interesting to do in the first place.
+
+\subsection{Divide-and-conquer}
+Add stuff here from section 2 in parparse paper.
 
 \subsection{Incrementality}
 Doing something incrementally means that one does it step by step, and not
@@ -36,8 +40,9 @@ longer than neccessary.
 Why is parallelism interesting and how does it apply in this case?
 
 \subsection{Parsing}
-Describe parsing in some detail, but not too much. Perhaps this section can be
-skipped, parsing is described in more detail below.
+To parse is a to check if some given input corresponds to a certain language's
+grammar, and in this thesis it will use \textbf{context-free grammars} for
+programming languages.
 
 \subsection{Motivation}
 In compilers, lexing and parsing are the two first phases. The output of these
@@ -48,6 +53,8 @@ parser that is incremental and that can also be parallelized could real-time
 feedback in the form of an AST easily be provided to the programmer. Most
 current text editors give syntax feedback based on regular expressions, which
 does not yield any information about depth or the surrounding AST.
+
+Something something about connecting to a type-checker.
 
 \section{Lexing}
 * Describe what lexing is
@@ -61,7 +68,7 @@ Chomsky Normal Form (CNF) is a subset of context-free grammars that was first
 described by linguist Noam Chomsky. Productions in CNF are restricted to the
 following forms:
 
-\begin{figure}
+\begin{figure}{H}
 % TODO: add caption etc 
 \begin{tabular}{l l l l}
     A & $\rightarrow$ & BC & A variable, B and C productions \\
@@ -71,10 +78,13 @@ following forms:
 
 \section{Parsing}
 \subsection{CYK algorithm}
+\subsection{Valiant}
 \subsection{Improvement by Bernardy \& Claessen}
+Running time analysis. Oracle for list.
 
 \section{Dependently typed programming}
-What is dependently typed programming, and how can it be used in Haskell.
+What is dependently typed programming, and how can it be used in Haskell. How
+about an example using vectors (standard example, sort of).
 \subsection{Kinds, Types and Values}
 Describe how kinds relate to types as types relate to values.
 
@@ -92,6 +102,7 @@ What are they?
 An illustration would be good here
 
 \section{Lexing}
+\subsection{LexGen -- Alex discrepancy}
 \subsection{Position information}
 
 \section{Parsing}
@@ -99,14 +110,14 @@ An illustration would be good here
 \subsection{Dependently typed programming with charts}
 \subsection{Oracle and unsafePerformIO}
 
-\section{Final product}
-\subsection{Testing}
-
 %
 % NEW CHAPTER
 %
 
 \chapter{Results}
+
+\section{Final product}
+\subsection{Testing}
 
 \section{Measurements}
 How fast is it? What is the complexity?
@@ -116,9 +127,9 @@ How fast is it? What is the complexity?
 %
 \chapter{Discussion}
 
-\section{Implementation}
-% Describe sort of chronologically?
-\subsection{LexGen -- Alex discrepancy}
+\section{Pitfalls}
+Look through the LOG to remember whatever happened. Describe sort of chronologically?
+
 \subsection{Too many result branches}
 Describe the reason for this, with the merge stuff.
 
@@ -127,7 +138,6 @@ Describe the reason for this, with the merge stuff.
 * RingP instance?
 * Newtype for tuples?
 
-\section{Improvements}
 \section{Future work}
 
 %
