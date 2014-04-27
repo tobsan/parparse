@@ -61,20 +61,44 @@ Something something about connecting to a type-checker.
 * Shortly describe LexGen and its relevance.
 
 \section{Context-free grammars}
-What are context-free grammars? Perhaps something about LBNF and BNFC?
+Give a light-weight description here.
+
+% Citera/kolla automataboken här.
+Formally, a context-free grammar is a 4-tuple: $G = (V, \Sigma, P, S)$. $V$ is
+a set of non-terminals, or variables. $\Sigma$ is the set of terminal symbols,
+describing the content that can be written in the language. $P$ is a 
+
+\subsection{Backus-Naur Form}
+% John Backus wrote a paper on this, cite it. See compling-essay.
+Context-free grammars are often used to describe the syntax of programming
+languages. Such descriptions are often given in a \textbf{labelled Backus-Naur
+form}, where each rule is written on the following form:
+$$Label. Variable ::= Production$$ % Something like that, at least.
+% Cite BNFC
+Grammars written in Labelled Backus-Naur Form are also used in the \textbf{BNF
+Converter (BNFC)}, a lexer and parser generator tool developed at Chalmers.
+Given such a grammar, BNFC generates, among other things, a lexer and a parser,
+implemented in one of several languages, for the language described in that
+grammar. According to documentation, usage of BNFC saves approx 90\% of
+source code in writing a compiler front-end. 
 
 \subsection{Chomsky Normal Form}
 Chomsky Normal Form (CNF) is a subset of context-free grammars that was first
 described by linguist Noam Chomsky. Productions in CNF are restricted to the
 following forms:
 
-\begin{figure}{H}
-% TODO: add caption etc 
+\begin{figure}[h]
 \begin{tabular}{l l l l}
-    A & $\rightarrow$ & BC & A variable, B and C productions \\
-    A & $\rightarrow$ & a & A variable, a nonterminal \\
+    A & $\rightarrow$ & BC, & A variable, B and C productions \\
+    A & $\rightarrow$ & a, & A variable, a terminal symbol \\
 \end{tabular}
+\caption{Rules allowed in Chomsky Normal Form}
 \end{figure}
+Since grammars in CNF are restricted to branches or single terminal symbols,
+they are well suited for usage in divide-and-conquer algorithms. There are
+several existing algorithms to convert context-free grammars into CNF, so one
+does not have to write their grammars in CNF in the first place.
+% Cite Lange and Leiss, whose algorithm is used in BNFC.
 
 \section{Parsing}
 \subsection{CYK algorithm}
