@@ -3,6 +3,9 @@
 \usepackage{datetime}
 \usepackage[pdftex]{graphicx}
 \usepackage{epstopdf}
+\usepackage{listings}
+\usepackage{float}
+\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small}}{}
 
 \newdateformat{monthdate}{\monthname[\THEMONTH] \THEYEAR}
 
@@ -107,8 +110,8 @@ does not have to write their grammars in CNF in the first place.
 Running time analysis. Oracle for list.
 
 \section{Dependently typed programming}
-What is dependently typed programming, and how can it be used in Haskell. How
-about an example using vectors (standard example, sort of).
+In dependently typed programming, types are dependent on values.
+
 \subsection{Kinds, Types and Values}
 Describe how kinds relate to types as types relate to values.
 
@@ -117,20 +120,89 @@ Describe how kinds relate to types as types relate to values.
 %
 
 \chapter{Implementation}
+Before going into details about the implementation of this parser, there are a
+couple of libraries and programming techniques one has to be familiar with
+before moving forward. I will first describe those, and then move on to describe
+changes to the lexer I inherited, and the implementation of the parser.
 
 \section{Finger trees}
-What are they?
-\section{Measuring and Monoids}
+A finger tree is a finite data structure with logarithmic time access and
+concatenation. The finger tree is similar to a general binary tree, where each
+branch has a couple of \textit{fingers} (values) so that adding a new value does
+not neccessarily add a new branch to the tree. % TODO: Referens till paper om finger trees
 
-\subsection{Pipeline of measures}
-An illustration would be good here
+A Haskell implementation suitable for everyday needs exists in the
+\texttt{Data.Sequence} package, and a more general structure is available in the
+\texttt{Data.FingerTree} package. The more general one is the one that will be
+used for this project, and is the one that was used for the LexGen project.
+
+\subsection{Measuring and Monoids}
+Two specific features in the general FingerTree data type are the need for
+Measuring and Monoids. These are fundamental to the parser, so we will look more
+deeply into them here.
+
+A \textit{monoid} is a mathematical object with an identity element and an
+associative operation. In Haskell, this is provided by writing instances of this
+type class:
+\begin{figure}[H]
+% TODO: Src-referens
+\begin{code}
+class Monoid a where
+    -- Identity of mappend
+    mempty  :: a
+    -- An associative operation
+    mappend :: a -> a -> a
+\end{code}
+\caption{The Monoid type class}
+\end{figure}
+This means that anything that is a Monoid has an identity element (that can be
+accessed with \textit{mempty}) and an associative operation to append monoids
+together (\textit{mappend}).
+
+% TODO: Explain what it means to be measured.
+For the FingerTree type, anything that can be measured, has to also be a monoid.
+This is ensured not by the data type itself, but by every function operating on
+the finger tree. 
+\begin{figure}[H]
+% TODO: src-referens
+\begin{code}
+-- Things that can be measured
+class Monoid v => Measured v a | a -> v where
+    measure :: a -> v
+
+-- FingerTrees are parametrized on both v (measures) and a (values)
+data FingerTree v a
+
+-- Create an empty finger tree
+empty :: Measured v a => FingerTree v a
+\end{code}
+\caption{Measuring and the FingerTree type}
+\end{figure}
+
+This means that, in order to use the FingerTree type parametrized on some type
+a, one has to have:
+\begin{enumerate}
+    \item{Another type v, such that $a \rightarrow v$ is a functional dependency}
+    \item{A monoid instance of v}
+    \item{An instance measured v a}
+\end{enumerate}
 
 \section{Lexing}
-\subsection{LexGen -- Alex discrepancy}
+For lexing code into tokens, the results from the LexGen project was used.
+However, some modifications had to be done to LexGen in order to be easily
+generated from BNFC as an Alex file. One large change was done to the lexing
+code, however, which is due to the fact that not only the lexer, but also the
+parser, should work incrementally. In the LexGen code, the output structure is a
+\texttt{Sequence} of tokens. Since \texttt{Sequence} is a less general
+implementation of finger trees, they cannot be measured, and is therefore not as
+suitable to use in an incremental setting.
+
 \subsection{Position information}
 
 \section{Parsing}
 \subsection{BNFC}
+\subsection{Pipeline of measures}
+    An illustration would be good here
 \subsection{Dependently typed programming with charts}
 \subsection{Oracle and unsafePerformIO}
 
