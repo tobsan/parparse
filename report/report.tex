@@ -2,10 +2,35 @@
 \usepackage[utf8]{inputenc}
 \usepackage{datetime}
 \usepackage[pdftex]{graphicx}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{natbib}
 \usepackage{epstopdf}
 \usepackage{listings}
 \usepackage{float}
-\lstnewenvironment{code}{\lstset{language=Haskell,basicstyle=\small}}{}
+
+% Haskell code listing
+\usepackage{listings}
+\lstloadlanguages{Haskell}
+\lstnewenvironment{code}
+    {\lstset{}%
+      \csname lst@SetFirstLabel\endcsname}
+    {\csname lst@SaveFirstLabel\endcsname}
+    \lstset{
+      basicstyle=\small\ttfamily,
+      numbers=left,
+      frame=single,
+      flexiblecolumns=false,
+      basewidth={0.5em,0.45em},
+      literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+               {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+               {\\\\}{{\char`\\\char`\\}}1
+               {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+               {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2 
+               {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+               {>>}{{>>}}2 {>>=}{{>>=}}2
+               {|}{{$\mid$}}1               
+    }
 
 \newdateformat{monthdate}{\monthname[\THEMONTH] \THEYEAR}
 
@@ -40,11 +65,19 @@ Doing something incrementally means that one does it step by step, and not
 longer than neccessary.
 
 \subsection{Parallelism}
-Why is parallelism interesting and how does it apply in this case?
+In modern day processors, rather than increasing the clock frequency, efforts are
+put into building processors with many cores, being able to run instructions in
+parallel. Programmers have for many years written code that runs several
+instructions seemingly simultaneous, even on single-core processors. With
+multi-core processors this can be done truly in parallel. Since divide-and-conquer
+algorithms usually work on several independent sub-problems, they are
+well-suited for parallelization. For this to become a reality, however, both the
+compiler and the source code must be written in a certain way to permit
+parallelization.
 
 \subsection{Parsing}
 To parse is a to check if some given input corresponds to a certain language's
-grammar, and in this thesis it will use \textbf{context-free grammars} for
+grammar, and in this thesis I will use \textbf{context-free grammars} for
 programming languages.
 
 \subsection{Motivation}
@@ -64,44 +97,83 @@ Something something about connecting to a type-checker.
 * Shortly describe LexGen and its relevance.
 
 \section{Context-free grammars}
-Give a light-weight description here.
+Context-free grammars are a way to describe formal languages, such as
+programming languages. They describe both the alphabet of a language and the
+rules for how to combine words in that language.
 
-% Citera/kolla automataboken här.
-Formally, a context-free grammar is a 4-tuple: $G = (V, \Sigma, P, S)$. $V$ is
-a set of non-terminals, or variables. $\Sigma$ is the set of terminal symbols,
-describing the content that can be written in the language. $P$ is a 
+Formally, a context-free grammar is a 4-tuple: $G = (V, \Sigma, P, S)$
+\cite[p.171]{automatabook}. $V$ is a set of non-terminals, or variables. $\Sigma$ is
+the set of terminal symbols, describing the content (or alphabet) that can be
+written in the language.  $P$ is a set of productions (or rewrite rules) that
+constitutes the recursive definition of the language. $S$ is the start symbols,
+where $S \in V$. 
+
+The language recognized by a context-free grammar $G$ is denoted $L(G)$ and is
+defined as 
+\[
+L(G) = \{w \in \Sigma^* \ |\  S \xRightarrow[G]{*} w\}
+\]
+That is, all words in the language that can be derived using the rules from the
+grammar and starting from the start symbol \cite[p. 177]{automatabook}.  A
+language $L$ is said to be context-free if there is a context-free grammar $G$
+that recognizes the language, meaning that $L = L(G)$.
+
+We can exemplify this using a simple made-up language of if-then-else clauses.
+The language terminals are \textit{if, then, else} and \textit{true and false}.
+There are two variables, \textit{I} (for if) and \textit{R} (for recursive)
+described by a total of four productions. The starting symbol is \textit{I} - so
+just writing \textit{true} would not be valid for this language. The formal
+definition of such a language can be seen in figure \ref{iflang}.
+
+\begin{figure}[H]
+\begin{align*}
+G &= (V, \Sigma , P, I) \\
+V &= \{I,R\} \\
+\Sigma &= \{true,false,if,then,else\} \\
+I &\rightarrow if\ R\ then\ R\ else\ R \\
+R &\rightarrow I \\
+R &\rightarrow true \\
+R &\rightarrow false
+\end{align*}
+\caption{Context-free grammar for a recursive if-then-else language}
+\label{iflang}
+\end{figure}
 
 \subsection{Backus-Naur Form}
-% John Backus wrote a paper on this, cite it. See compling-essay.
+John Backus wrote a paper on this, cite it? See compling-essay.
+
 Context-free grammars are often used to describe the syntax of programming
 languages. Such descriptions are often given in a \textbf{labelled Backus-Naur
 form}, where each rule is written on the following form:
-$$Label. Variable ::= Production$$ % Something like that, at least.
-% Cite BNFC
+\[
+Label.\ Variable ::= Production 
+\]
+
+Just link to BNFC here?
+
 Grammars written in Labelled Backus-Naur Form are also used in the \textbf{BNF
 Converter (BNFC)}, a lexer and parser generator tool developed at Chalmers.
 Given such a grammar, BNFC generates, among other things, a lexer and a parser,
 implemented in one of several languages, for the language described in that
-grammar. According to documentation, usage of BNFC saves approx 90\% of
-source code in writing a compiler front-end. 
+grammar. According to its documentation, usage of BNFC saves approx 90\% of
+source code work in writing a compiler front-end. 
 
 \subsection{Chomsky Normal Form}
 Chomsky Normal Form (CNF) is a subset of context-free grammars that was first
 described by linguist Noam Chomsky. Productions in CNF are restricted to the
 following forms:
 
-\begin{figure}[h]
+\begin{figure}[H]
 \begin{tabular}{l l l l}
-    A & $\rightarrow$ & BC, & A variable, B and C productions \\
-    A & $\rightarrow$ & a, & A variable, a terminal symbol \\
+    A & $\rightarrow$ & BC, & A is a variable, B and C are productions \\
+    A & $\rightarrow$ & a, & A is a variable, a is a terminal symbol \\
 \end{tabular}
 \caption{Rules allowed in Chomsky Normal Form}
 \end{figure}
 Since grammars in CNF are restricted to branches or single terminal symbols,
 they are well suited for usage in divide-and-conquer algorithms. There are
 several existing algorithms to convert context-free grammars into CNF, so one
-does not have to write their grammars in CNF in the first place.
-% Cite Lange and Leiss, whose algorithm is used in BNFC.
+does not have to write their grammars in CNF in the first place \cite{langeleiss}.
 
 \section{Parsing}
 \subsection{CYK algorithm}
@@ -110,10 +182,57 @@ does not have to write their grammars in CNF in the first place.
 Running time analysis. Oracle for list.
 
 \section{Dependently typed programming}
-In dependently typed programming, types are dependent on values.
+In a strictly typed programming language like Haskell, every value has a type
+that is enforced. Assigning an integer a floating-point value would not
+type-check and therefore would not compile. While this is useful and saves
+debugging time, it does not say anything about the contents of the values.
 
-\subsection{Kinds, Types and Values}
-Describe how kinds relate to types as types relate to values.
+A motivating example often used is implementation of a vector type. Vectors in
+this case is a fixed-length list of some type. In a typical Haskell setting we 
+may have a type as follows:
+\begin{figure}[H]
+\begin{code}
+data Vec a = Nil | V a Vec
+
+head :: Vec a -> a
+head Nil = error "empty vector"
+head (V a _) = a
+\end{code}
+\caption{Vector type and head function}
+\end{figure}
+This looks good, but it has the inherent problem that any code that tries to
+access the head of an empty Vec will compile but result in a runtime error. 
+
+In dependently typed programming, types may contain other types, acting as
+values, so that they relate the same way a value relates to its type. While
+Haskell is not a dependently typed programming language, there are ways to use
+dependent types even in Haskell. For our vector example that would look
+something like this:
+\begin{figure}[H]
+\begin{code}
+data Nat = Z | S Nat
+data Vec a n where
+    Nil :: Vec a Z
+    V :: a -> Vec a s -> Vec a (S s)
+
+head :: Vec a (S b) -> a
+head Nil = error "empty vector" -- this does not type-check
+head (V a _) = a
+\end{code}
+\caption{Dependently typed vector with head function}
+\end{figure}
+We created a new type Nat (for natural numbers) to keep track of the size of our
+vector. The new Vec type is \textit{dependent} on the Nat type, while still
+holding values of some type \texttt{a}. What this code does not permit, however,
+is the Nil case for head. Because the type of head requires the Vec to be
+non-nil (with (S b) in its type signature) there is no need to check for a Nil
+vector here. In fact, the compiler will not pass the above code, as indicated by
+the comment, since the first case in head does not type check. It has to be
+removed. The main advantage of this vector type is that any code that uses head
+and passes type-checking will be guaranteed to never encounter an empty vector.
+This way, even more bugs are caught at compile-time.
+
+TODO: Describe the relation between Kinds, Types and Values in more detail? More description needed?
 
 %
 % NEW CHAPTER
@@ -129,7 +248,7 @@ changes to the lexer I inherited, and the implementation of the parser.
 A finger tree is a finite data structure with logarithmic time access and
 concatenation. The finger tree is similar to a general binary tree, where each
 branch has a couple of \textit{fingers} (values) so that adding a new value does
-not neccessarily add a new branch to the tree. % TODO: Referens till paper om finger trees
+not neccessarily add a new branch to the tree. TODO: Referens till paper om finger trees
 
 A Haskell implementation suitable for everyday needs exists in the
 \texttt{Data.Sequence} package, and a more general structure is available in the
@@ -145,7 +264,7 @@ A \textit{monoid} is a mathematical object with an identity element and an
 associative operation. In Haskell, this is provided by writing instances of this
 type class:
 \begin{figure}[H]
-% TODO: Src-referens
+TODO: Src-referens
 \begin{code}
 class Monoid a where
     -- Identity of mappend
@@ -159,12 +278,12 @@ This means that anything that is a Monoid has an identity element (that can be
 accessed with \textit{mempty}) and an associative operation to append monoids
 together (\textit{mappend}).
 
-% TODO: Explain what it means to be measured.
+TODO: Explain what it means to be measured.
 For the FingerTree type, anything that can be measured, has to also be a monoid.
 This is ensured not by the data type itself, but by every function operating on
 the finger tree. 
 \begin{figure}[H]
-% TODO: src-referens
+TODO: src-referens
 \begin{code}
 -- Things that can be measured
 class Monoid v => Measured v a | a -> v where
@@ -195,16 +314,93 @@ code, however, which is due to the fact that not only the lexer, but also the
 parser, should work incrementally. In the LexGen code, the output structure is a
 \texttt{Sequence} of tokens. Since \texttt{Sequence} is a less general
 implementation of finger trees, they cannot be measured, and is therefore not as
-suitable to use in an incremental setting.
-
-\subsection{Position information}
+suitable to use in an incremental setting. Hence, instead of outputting tokens
+as a \texttt{Sequence}, the code was changed to output as another
+\texttt{FingerTree}, from which the tokens could then be measured (see Pipeline
+of measures below).
 
 \section{Parsing}
+TODO: Move this part down? Duplicate in BNFC
+TODO: An illustration here perhaps?
+
+Observing that the lexer could easily be generated from BNFC, it was natural to
+plug it in, and given that, the parser code is so general that it can also be
+generated from any LBNF grammar.
 \subsection{BNFC}
+There was an existing reference implementation in BNFC for the optimisation to
+Valiant's algorithm, that could be accessed using the \texttt{--cnf} option.
+That option generated large tables needed for combining different tokens. Since
+the this project is similar to the reference implementation, it was natural to
+generate the new parser by using a new option.
+
+For the Haskell backend, BNFC uses Alex as a lexer, as did LexGen, so it was
+easy to use the LexGen core and have BNFC and Alex generate the DFA needed for
+the lexer to work. 
+
 \subsection{Pipeline of measures}
-    An illustration would be good here
+TODO: Clarify that ONE char does not become the whole AST. Tree structure!
+
+Using the \texttt{FingerTree} type, the lexer could use that data type to
+measure characters into an intermediate type for lexing. That intermediate
+\texttt{FingerTree} could then in turn be measured to the type used for parsing.
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{pipeline.eps}
+\caption{Diagram of measuring pipeline}
+\end{figure}
+Looking at simple testing code shows easily how the data progresses through the
+pipeline. \texttt{stateToTree} is an auxiliary function extracting a
+\texttt{FingerTree} from the internal lexer state.
+
+\begin{figure}[H]
+\begin{code}
+test :: FilePath -> IO (SomeTri [(CATEGORY,Any)])
+test filename = do
+    file <- readFile filename
+    let mes = measure $ makeTree file
+        tri = measure $ stateToTree mes
+    return (results tri)
+\end{code} 
+\caption{Code showing the measuring pipeline}
+\end{figure}
+
 \subsection{Dependently typed programming with charts}
+The existing code. Illustration needed here.
+
 \subsection{Oracle and unsafePerformIO}
+The use of an oracle presented a bit of a problem in implementing a monoid
+instance for the parser, for the simple reason that it is very hard to simply
+pick a bool at random in Haskell without it being always \texttt{True} or always
+\texttt{False}. The call to \texttt{merge} in \texttt{mappend} illustrates this
+clearly:
+\begin{figure}[H]
+\begin{code}
+instance Monoid (SomeTri a) where
+    t0 `mappend` t1 = merge True t0 t1
+\end{code}
+\caption{Parser Monoid instance before random oracle}
+\end{figure}
+The call to \texttt{merge} requires a \texttt{Bool} acting as the oracle as an
+argument. Since a Monoid has no context outside its own type, it is hard, if not
+impossible, to generate a Bool using only the SomeTri type. One could argue for
+creating a newtype wrapper around a tuple of a SomeTri and a StdGen, used to
+generate the bool at each step, but that only moves the problem to the mempty
+call, where a fresh StdGen would have to be picked at each instance.
+
+The solution to this problem came in the form of a call to unsafePerformIO.
+While this is controversial, it was also not completely obvious to implement. If
+an unsafe call to randomIO was made separately from the merge call, this call
+would be evaluated only once, rendering the solution useless. The trick here was
+to put the whole call inside an unsafe wrapper, so that the call to merge, and
+with that the call to randomIO, became dependent on the input.
+\begin{figure}
+\begin{code}
+instance Monoid (SomeTri a) where
+    t0 `mappend` t1 = unsafePerformIO $ do
+      b <- randomIO
+      return $ merge b t0 t1
+\end{code}
+\caption{Parser Monoid instance with oracle}
+\end{figure}
 
 %
 % NEW CHAPTER
@@ -239,7 +435,9 @@ Describe the reason for this, with the merge stuff.
 %
 % BIBLIOGRAPHY
 %
-\bibliographystyle{plain}
+
+% TODO: Decide on some style here
+\bibliographystyle{alpha}
 \bibliography{bibliography.bib}
 
 %
