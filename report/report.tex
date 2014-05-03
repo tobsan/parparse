@@ -93,8 +93,37 @@ does not yield any information about depth or the surrounding AST.
 Something something about connecting to a type-checker.
 
 \section{Lexing}
-* Describe what lexing is
-* Shortly describe LexGen and its relevance.
+In compilers, a \textit{lexer} reads input source code and groups the characters
+into sequences called \textit{lexemes} so that each lexeme has some meaning in
+the language the compiler is built for \cite[p. 5, p. 109]{dragonbook}. The
+lexemes are wrapped in \textit{tokens} that denote what function and position
+each lexeme has. The tokens are then passed on to the parser for syntactic
+analysis.
+
+For a language like C, the code in figure \ref{lexsample} would be valid, and
+can serve as an example of how lexing is done.
+\begin{figure}[H]
+\begin{code}
+while(i < 5) {
+    i++;
+}
+\end{code}
+\caption{A while loop that would be valid in C}
+\label{lexsample}
+\end{figure}
+A lexer would recognise that \textit{while} is a keyword and place it in its own
+token. It would also observe that (, ), \textit{\{} and \textit{\}} are used for
+control grouping of code. Furthermore, i is an identifier and 5 is a number, $<$
+and ++ are operators and ; denote separation of statements. All of these will be
+forwarded as tokens to the parser.
+
+\subsection{LexGen}
+As a master's thesis, a generator for incremental divide-and-conquer lexers was
+developed in 2013 by Hansson and Hugo \cite{divconqlex}. Since the aim of this
+thesis is to write an incremental divide-and-conquer parser, their work is
+well-suited as a starting point, and as something to build on. Their lexer
+utilised Alex for core lexing routines and relied heavily on the use of arrays
+and finger trees, which we will see more of later. 
 
 \section{Context-free grammars}
 Context-free grammars are a way to describe formal languages, such as
@@ -140,7 +169,7 @@ R &\rightarrow false
 \end{figure}
 
 \subsection{Backus-Naur Form}
-John Backus wrote a paper on this, cite it? See compling-essay.
+TODO: John Backus wrote a paper on this, cite it? See compling-essay.
 
 Context-free grammars are often used to describe the syntax of programming
 languages. Such descriptions are often given in a \textbf{labelled Backus-Naur
@@ -227,12 +256,10 @@ holding values of some type \texttt{a}. What this code does not permit, however,
 is the Nil case for head. Because the type of head requires the Vec to be
 non-nil (with (S b) in its type signature) there is no need to check for a Nil
 vector here. In fact, the compiler will not pass the above code, as indicated by
-the comment, since the first case in head does not type check. It has to be
-removed. The main advantage of this vector type is that any code that uses head
-and passes type-checking will be guaranteed to never encounter an empty vector.
-This way, even more bugs are caught at compile-time.
-
-TODO: Describe the relation between Kinds, Types and Values in more detail? More description needed?
+the comment, since the first case in head does not type check. The main
+advantage of this vector type is that any code that uses head and passes
+type-checking will be guaranteed to never encounter an empty vector.  This way,
+even more bugs are caught at compile-time.
 
 %
 % NEW CHAPTER
@@ -248,7 +275,9 @@ changes to the lexer I inherited, and the implementation of the parser.
 A finger tree is a finite data structure with logarithmic time access and
 concatenation. The finger tree is similar to a general binary tree, where each
 branch has a couple of \textit{fingers} (values) so that adding a new value does
-not neccessarily add a new branch to the tree. TODO: Referens till paper om finger trees
+not neccessarily add a new branch to the tree. The tree structure makes the data
+structure suitable for a divide-and-conquer algorithm. TODO: Referens till paper
+om finger trees
 
 A Haskell implementation suitable for everyday needs exists in the
 \texttt{Data.Sequence} package, and a more general structure is available in the
@@ -256,9 +285,9 @@ A Haskell implementation suitable for everyday needs exists in the
 used for this project, and is the one that was used for the LexGen project.
 
 \subsection{Measuring and Monoids}
-Two specific features in the general FingerTree data type are the need for
-Measuring and Monoids. These are fundamental to the parser, so we will look more
-deeply into them here.
+Two specific features in the general FingerTree data type are monoids and
+measuring. These are fundamental to the parser, so we will look more deeply into
+them here.
 
 A \textit{monoid} is a mathematical object with an identity element and an
 associative operation. In Haskell, this is provided by writing instances of this
@@ -276,12 +305,22 @@ class Monoid a where
 \end{figure}
 This means that anything that is a Monoid has an identity element (that can be
 accessed with \textit{mempty}) and an associative operation to append monoids
-together (\textit{mappend}).
+together (\textit{mappend}). A simple list example illustrates this:
+\begin{figure}[H]
+\begin{code}
+instance Monoid [a] where
+    mempty = []
+    mappend = (++)
+\end{code}
+\caption{Monoid instance for lists}
+\end{figure}
+TODO: Say something more about Monoids?
 
-TODO: Explain what it means to be measured.
-For the FingerTree type, anything that can be measured, has to also be a monoid.
-This is ensured not by the data type itself, but by every function operating on
-the finger tree. 
+The FingerTree type has a notion of being able to \textit{measure} its elements.
+In this case, to measure means to have a function that, given an element of the
+type the FingerTree contains, yields a value of some type -- the measure of that
+element. Furthermore, any type that the elements can be measured to has to be a
+monoid. The existance of a measured instance is ensured by the FingerTree API. 
 \begin{figure}[H]
 TODO: src-referens
 \begin{code}
@@ -297,14 +336,30 @@ empty :: Measured v a => FingerTree v a
 \end{code}
 \caption{Measuring and the FingerTree type}
 \end{figure}
+This means that, in order to use the FingerTree, one need to fulfil a few
+criteria first. Let's say you want to have a FingerTree of Strings and that the
+measure should be the (combined) length of the Strings, then your type would be
+\texttt{FingerTree Int String}. For that to work, you first need to be able to
+convert between Strings and Int, by writing an instance of Measured for String
+Int. This would typically just be the length function. However, for that to work
+you need a Monoid instance for Ints. Perhaps it would look something like this:
 
-This means that, in order to use the FingerTree type parametrized on some type
-a, one has to have:
-\begin{enumerate}
-    \item{Another type v, such that $a \rightarrow v$ is a functional dependency}
-    \item{A monoid instance of v}
-    \item{An instance measured v a}
-\end{enumerate}
+\begin{figure}[H]
+\begin{code}
+type MyTree = FingerTree Int String
+instance Measured String Int where
+    measure = length
+instance Monoid Int where
+    mempty = 0
+    mappend = (+)
+\end{code}
+\caption{One possible measure from String to Int}
+\end{figure}
+
+It should be noted however, that since instances cannot be hided, writing a
+general Monoid instance for Ints over addition is perhaps not the best idea.
+Wrapper types with instances over addition and multiplication are available in
+the \texttt{Data.Monoid} library.
 
 \section{Lexing}
 For lexing code into tokens, the results from the LexGen project was used.
@@ -392,7 +447,7 @@ an unsafe call to randomIO was made separately from the merge call, this call
 would be evaluated only once, rendering the solution useless. The trick here was
 to put the whole call inside an unsafe wrapper, so that the call to merge, and
 with that the call to randomIO, became dependent on the input.
-\begin{figure}
+\begin{figure}[H]
 \begin{code}
 instance Monoid (SomeTri a) where
     t0 `mappend` t1 = unsafePerformIO $ do
@@ -401,6 +456,15 @@ instance Monoid (SomeTri a) where
 \end{code}
 \caption{Parser Monoid instance with oracle}
 \end{figure}
+Now usually, for \texttt{unsafePerformIO} to be safe one should make sure that
+the call is free from side effects and \textit{independent of its environment}.
+\cite{unsafeHackage}. Since none of those two requirements are fulfilled here
+this calls for discussion. In general, one does not want a call to
+unsafePerformIO to be evaluated more than once -- but in this case this is a
+requirement for the code to behave as expected, and that's why it is indeed
+dependent on its environment. The only side effect in this snippet is the use of
+the global random number generator and that should not affect any other part of
+the program, and can thus be considered safe.
 
 %
 % NEW CHAPTER
@@ -438,7 +502,7 @@ Describe the reason for this, with the merge stuff.
 
 % TODO: Decide on some style here
 \bibliographystyle{alpha}
-\bibliography{bibliography.bib}
+\bibliography{bibliography}
 
 %
 % ANY APPENDICES HERE
