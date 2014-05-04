@@ -1,10 +1,10 @@
 \documentclass[a4paper,12pt,twosided]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{datetime}
+\usepackage{url}
 \usepackage[pdftex]{graphicx}
 \usepackage{amsmath}
 \usepackage{mathtools}
-\usepackage{natbib}
 \usepackage{epstopdf}
 \usepackage{listings}
 \usepackage{float}
@@ -35,7 +35,6 @@
 \newdateformat{monthdate}{\monthname[\THEMONTH] \THEYEAR}
 
 \begin{document}
-
 \include{titlepage}
 
 \begin{abstract}
@@ -58,11 +57,12 @@ explanation of the topics covered, and end with a motivation for why this is
 interesting to do in the first place.
 
 \subsection{Divide-and-conquer}
+Something in general about them. Maybe mergesort?
 Add stuff here from section 2 in parparse paper.
 
 \subsection{Incrementality}
 Doing something incrementally means that one does it step by step, and not
-longer than neccessary.
+longer than neccessary. Not a new idea at all. 
 
 \subsection{Parallelism}
 In modern day processors, rather than increasing the clock frequency, efforts are
@@ -78,7 +78,10 @@ parallelization.
 \subsection{Parsing}
 To parse is a to check if some given input corresponds to a certain language's
 grammar, and in this thesis I will use \textbf{context-free grammars} for
-programming languages.
+programming languages. Many programming errors are syntactical ones, such as
+misspelled keywords, missing parenthesis or semicolons and so on. All such
+errors are caught in parsing. Parsing will be described in more detail in
+section \ref{parsingsection}.
 
 \subsection{Motivation}
 In compilers, lexing and parsing are the two first phases. The output of these
@@ -205,10 +208,16 @@ several existing algorithms to convert context-free grammars into CNF, so one
 does not have to write their grammars in CNF in the first place \cite{langeleiss}.
 
 \section{Parsing}
+\label{parsingsection}
+Parsing in general here.
+
 \subsection{CYK algorithm}
+Matrices, multiplication etc. 
+
 \subsection{Valiant}
+0-1-matrices improvement. 
 \subsection{Improvement by Bernardy \& Claessen}
-Running time analysis. Oracle for list.
+Running time analysis. Oracle for lists. 
 
 \section{Dependently typed programming}
 In a strictly typed programming language like Haskell, every value has a type
@@ -355,7 +364,6 @@ instance Monoid Int where
 \end{code}
 \caption{One possible measure from String to Int}
 \end{figure}
-
 It should be noted however, that since instances cannot be hided, writing a
 general Monoid instance for Ints over addition is perhaps not the best idea.
 Wrapper types with instances over addition and multiplication are available in
@@ -373,6 +381,7 @@ suitable to use in an incremental setting. Hence, instead of outputting tokens
 as a \texttt{Sequence}, the code was changed to output as another
 \texttt{FingerTree}, from which the tokens could then be measured (see Pipeline
 of measures below).
+TODO: Code here?
 
 \section{Parsing}
 TODO: Move this part down? Duplicate in BNFC
@@ -394,6 +403,7 @@ the lexer to work.
 
 \subsection{Pipeline of measures}
 TODO: Clarify that ONE char does not become the whole AST. Tree structure!
+TODO: Paste code with Measured constraints on the Measured instance!
 
 Using the \texttt{FingerTree} type, the lexer could use that data type to
 measure characters into an intermediate type for lexing. That intermediate

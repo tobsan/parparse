@@ -6,8 +6,9 @@
 
 REPORT="report.tex"
 BIBL="report.aux"
+REALBIBL="bibliography.bib"
 
-while inotifywait -q "$REPORT"
+while inotifywait -q "$REPORT" "$REALBIBL"
 do
     sleep 1s
     pdflatex "$REPORT"
