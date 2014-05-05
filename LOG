@@ -1,6 +1,11 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-05-05, before supervision
+==============================
+* Bug somewhere leads to more than one result. Not related to oracle though.
+* Stack space overflow on large inputs
+
 2014-04-14, after supervision
 =============================
 * Any merging of sections/parts of the report can be done later - just write the
