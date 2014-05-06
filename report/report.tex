@@ -391,8 +391,8 @@ parser, should work incrementally. In the LexGen code, the output structure is a
 implementation of finger trees, they cannot be measured, and is therefore not as
 suitable to use in an incremental setting. Hence, instead of outputting tokens
 as a \texttt{Sequence}, the code was changed to output as another
-\texttt{FingerTree}, from which the tokens could then be measured (see Pipeline
-of measures below).
+\texttt{FingerTree}, from which the tokens could then be measured (see section
+\ref{pipeline} below).
 TODO: Code here?
 
 \section{Parsing}
@@ -414,6 +414,7 @@ easy to use the LexGen core and have BNFC and Alex generate the DFA needed for
 the lexer to work. 
 
 \subsection{Pipeline of measures}
+\label{pipeline}
 TODO: Clarify that ONE char does not become the whole AST. Tree structure!
 TODO: Paste code with Measured constraints on the Measured instance!
 
@@ -422,7 +423,7 @@ measure characters into an intermediate type for lexing. That intermediate
 \texttt{FingerTree} could then in turn be measured to the type used for parsing.
 \begin{figure}[H]
 Picture here as soon as its pushed to the repo.
-% \includegraphics[width=\textwidth]{pipeline.eps}
+\includegraphics[width=\textwidth]{pipeline.eps}
 \caption{Diagram of measuring pipeline}
 \end{figure}
 Looking at simple testing code shows easily how the data progresses through the
@@ -440,6 +441,30 @@ test filename = do
 \end{code} 
 \caption{Code showing the measuring pipeline}
 \end{figure}
+The \texttt{Measured} instance for the lexer was written as part of the LexGen
+project, and was only slightly modified to fit the parser. The \texttt{Measured}
+instance for the parser is far more interesting, though. We can se how it works
+in figure \ref{parsemeasure}
+
+\begin{figure}[H]
+TODO: A figure
+\begin{code}
+instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
+    -- Note: place the token just above the diagonal
+    measure tok = T (bin' Leaf' Leaf') (q True :/: q False)
+      where q b = quad zero (t b) zero zero
+            select b = if b then leftOf else rightOf
+            t b = case intToToken tok of
+                Nothing    -> Zero
+                Just token -> One $ select b $ tokenToCats b token
+
+\end{code}
+\caption{\label{parsemeasure} Measure from token to upper-triangular matrix}
+\end{figure}
+We create a 2x2 matrix, and place the token in the upper-right corner -- just
+above the diagonal. 
+
+TODO: The Monoid instance here as well.
 
 \subsection{Dependently typed programming with charts}
 The \texttt{SomeTri} type is the type representing upper-triangular matrices in
@@ -465,8 +490,8 @@ data Mat :: Shape -> Shape -> * -> * where
   Row :: Mat x1 Leaf a -> Mat x2 Leaf a -> Mat (Bin x1 x2) Leaf a
   Col :: Mat Leaf y1 a -> Mat Leaf y2 a -> Mat Leaf (Bin y1 y2) a
 \end{code}
-\caption{The Mat type with its dependent Shape type. Note that shapes are used
-both for x-axis and y-axis size}
+\caption{The \texttt{Mat} type with its dependent \texttt{Shape} type. Note that
+shapes are used both for x-axis and y-axis size}
 \end{figure}
 In a setting without using FingerTrees and Monoids, such as the reference
 implementation from the paper, it is possible to merge matrices using a single
@@ -477,8 +502,8 @@ small void in the merged matrix, as illustrated in figure \label{mergein}.
 \begin{figure}[H]
 Till vänster, mergein MED element
 Till höger, merge UTAN element
-\caption{\texttt{merge} with and without a single element as glue}
-\label{mergein}
+\caption{\label{mergein}\texttt{merge} with and without a single element as glue}
+
 \end{figure}
 Because of the absence of an extra element, the existing mergein function could
 not be used, but a merge function had to be implemented. Observing that the V
@@ -491,7 +516,7 @@ TODO: Figur här som förklarar chop-grejen.
 
 \begin{figure}[H]
 \begin{code}
-merge :: RingP a => Bool -> SomeTri a -> SomeTri a -> SomeTri a
+merge :: Bool -> SomeTri a -> SomeTri a -> SomeTri a
 merge p (T y l) (T x r) = chopShape x $ \chopper x' ->
     let (rTopL, rL') = chopFirst chopper (leftOf r)
         (rTopR, rR') = chopFirst chopper (rightOf r)
@@ -504,8 +529,47 @@ merge p (T y l) (T x r) = chopShape x $ \chopper x' ->
 \end{figure}
 Looking at the code in figure \ref{merge}, there are a few things to note before
 we look more deeply into this. First, \texttt{chopShape} operates on the x-axis
-shape in the matrix.
+shape in the matrix, returning a continuation containing \texttt{chopper} and a
+new x-shape. \texttt{chopper} is of type \texttt{ChopFirst}, which provides an
+easy way to pattern match on the x-shape of a \texttt{Mat}, as we can se if we
+look at \texttt{chopFirst}, which utilises this.
 
+\begin{figure}[H]
+\begin{code}
+data ChopFirst x x' where
+  Stop :: ChopFirst (Bin Leaf x) x
+  Continue :: ChopFirst x x' -> ChopFirst (Bin x x0) (Bin x' x0)
+
+chopFirst :: ChopFirst x x' -> Mat x x a  
+                            -> (Mat x' Leaf a, Mat x' x' a)
+chopFirst _ Zero = (Zero,Zero)
+chopFirst Stop (Quad a b c d) = (b,d)
+chopFirst (Continue q) (Quad a b c d) =
+  let  (e, a') = chopFirst q a
+       (b',f)  = chopFirstRow q b
+  in (row e f,quad a' b' zero d)
+\end{code}
+\caption{\label{chopfirst} ChopFirst type and corresponding function}
+\end{figure}
+
+Note that chopFirst, as seen in figure \ref{chopfirst} does not match the
+\texttt{Col}, \texttt{Row} or \texttt{One} constructors. For the \texttt{One}
+case it is quite obvious because we cannot chop a 1x1 matrix. For the other two,
+this is due to the type of \texttt{chopFirst}, where the input is a square
+matrix: \texttt{Mat x x a}. Because both \texttt{Col} and \texttt{Row} cannot be
+square (unless they're 1x1, in which case the \texttt{One} construct should be
+used instead, which cannot be chopped anyway), there is no need to check for
+them, and actually writing those cases would trigger a type error when
+compiling.
+
+Finally, before calling \texttt{closeDisjointP} (which represents the V function
+from Valiant's algorithm), we throw away all but the lower leftmost value, using
+\texttt{mkLast'}. The resulting new matrix is a quad, where the left matrix is
+left untouched, the right is chopped and a new matrix that serves as top-right
+is computed. As usual, all values below the diagonal are zero.
+
+TODO: Explain the recomputation.
+TODO: Figur, typ fyrfältare. Left, CDP, Zero, ChoppedRight.
 
 \subsection{Oracle and unsafePerformIO}
 The use of an oracle presented a bit of a problem in implementing a monoid
