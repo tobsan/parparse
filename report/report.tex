@@ -175,7 +175,10 @@ The language terminals are \textit{if, then, else} and \textit{true and false}.
 There are two variables, \textit{I} (for if) and \textit{R} (for recursive)
 described by a total of four productions. The starting symbol is \textit{I} - so
 just writing \textit{true} would not be valid for this language. The formal
-definition of such a language can be seen in figure \ref{iflang}.
+definition of such a language can be seen in figure \ref{iflang}. Note that
+while P is not explicitly defined, each of the rules for I and R constitute P.
+Each production (partially) defines a variable and contains terminals and/or
+symbols on its right-hand side \cite[p.171]{automatabook}.
 
 \begin{figure}[H]
 \begin{align*}
@@ -242,7 +245,25 @@ more general technique.
 
 \subsection{CYK algorithm}
 The CYK algorithm is named after its inventors Cocke, Younger and Kasami, who
-independently discovered the algorithm in the late 1960s \cite{Younger67}.
+independently discovered the algorithm in the late 1960s \cite{Younger67}. The
+algorithm works on a context-free grammar in CNF, yields a matrix with the
+following properties:
+
+\begin{figure}[H]
+\begin{quote}
+This recognition algorithm will be framed in terms of a recognition
+matrix. This matrix lists, for each substring of the test string $S_t$ , all
+the symbols in $N$ which generate that substring. In particular, this
+matrix lists the symbols which generate the full string $S_t$ : if special
+symbol $S$ is contained in this list, the string $S_t$ is then accepted as a
+sentence in the language; if not, it is rejected.
+\end{quote}
+\caption{\label{youngerquote}Description of recognition matrix by Daniel H.
+Younger.}
+\end{figure}
+
+Note that $N$ in figure \ref{youngerquote} refers to the set of variables, which
+we denote as $V$. 
 
 \subsection{Valiant}
 In 1975, Leslie G. Valiant refined the algorithm by showing that context-free
@@ -364,7 +385,6 @@ instance Monoid [a] where
 \end{code}
 \caption{Monoid instance for lists}
 \end{figure}
-TODO: Say something more about Monoids?
 
 The FingerTree type has a notion of being able to \textit{measure} its elements.
 In this case, to measure means to have a function that, given an element of the
@@ -453,7 +473,7 @@ measure characters into an intermediate type for lexing. That intermediate
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{pipeline.eps}
-\caption{Diagram of measuring pipeline}
+\caption{\label{pipelinedia}Diagram of measuring pipeline}
 \end{figure}
 
 Looking at simple testing code shows easily how the data progresses through the
@@ -470,6 +490,24 @@ test filename = do
     return (results tri)
 \end{code} 
 \caption{Code showing the measuring pipeline}
+\end{figure}
+
+Note that figure \ref{pipelinedia} is restricted to a single char. This process
+is done for every char in the input source code, and the results are merged
+using the monoid implementations of \texttt{mappend} for the lexer and the
+parser. This behaviour is done automatically with the call to \texttt{measure}.
+The lexer measure yields a lexer state containing tokens, which are then
+in turn measured into the matrix type \texttt{SomeTri [(CATEGORY,Any)]} by the
+parser, where each tuple holds a value of the \texttt{CATEGORY} type,
+representing an intermediate parser state, such as an almost-complete function
+header, and \texttt{Any} is a universal type that can hold any value, and is
+used as an intermediary for the generated AST. Since the lexer was not our main
+concern, we will not look further into its inner workings here.
+
+\begin{figure}[H]
+\includegraphics[width=\textwidth]{tree.eps}
+\caption{\label{treemeasure}Graphical representation of lexing and parsing using
+trees}
 \end{figure}
 
 The \texttt{Measured} instance for the lexer was written as part of the LexGen
@@ -491,6 +529,7 @@ instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
 \end{code}
 \caption{\label{parsemeasure} Measure from token to upper-triangular matrix}
 \end{figure}
+
 We create a 2x2 matrix, and place the token in the upper-right corner -- just
 above the diagonal. If the lexer did not return a token, a zero matrix of the
 same size is created. This is shown in figure \ref{measurematrix}. The large
