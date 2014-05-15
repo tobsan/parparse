@@ -36,11 +36,11 @@ lex tree = stateToTree $ measure tree
 -- TODO: Generate this from BNFC
 parse :: FingerTree ParseState IntToken -> Maybe Prog
 parse tree = case results $ measure tree of
-    [(_,[(cat,ast,r)],_)] -> unsafeCoerce# ast
+    [(_,[(cat,ast)],_)] -> unsafeCoerce# ast
     _                     -> Nothing
 
 type LexState = (Table State (Tokens ParseState),Size)
-type ParseState = SomeTri [(CATEGORY,Any,Range)]
+type ParseState = SomeTri [(CATEGORY,Any)]
 type Result = [(Int,[(CATEGORY,Any)],Int)]
 
 instance RingP a => Monoid (SomeTri a) where
@@ -62,18 +62,16 @@ instance Monoid Range where
     (R l1 c1 t1) `mappend` (R l2 c2 t2) = R (l2 . l1) (c2 . c1) (t2 . t1)
 
 -- | Measure (parse) some token
-instance Measured (SomeTri [(CATEGORY,Any,Range)]) IntToken where
+instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
     -- Note: place the token just above the diagonal
     measure tok = T (bin' Leaf' Leaf') (q True :/: q False)
       where q b = quad zero (t b) zero zero
             select b = if b then leftOf else rightOf
             t b = case intToToken tok of
                 Nothing    -> Zero
-                Just token -> 
-                    let cats = select b $ tokenToCats b token
-                        lrange = F.foldMap toRange (lexeme tok)
-                    in One $ map (\(c,a) -> (c,a,lrange)) cats
+                Just token -> One $ select b $ tokenToCats b token
 
+{-
 -- r for Range
 instance Monoid r => RingP [(CATEGORY,Any,r)] where 
     -- Modified from CNFTables module
@@ -86,6 +84,7 @@ instance Monoid r => RingP [(CATEGORY,Any,r)] where
         trav [] = pure []
         trav (x:xs) = (++) <$> x <*> trav xs
         app tx ty rx ry (c,f) = (c, f tx ty, rx <> ry)
+-}
 
 -- None and Skip are just discarded, as seen in measureToTokens in LexGen
 intToToken :: IntToken -> Maybe Token
@@ -103,8 +102,8 @@ intToToken (Token !lexeme !acc) = case acc of
 --    putStrLn "*************"
 
 -- Slightly modified from CnfTables
-toAst :: (CATEGORY,Any,Range) -> String
-toAst (cat,ast,range) = case cat of 
+toAst :: (CATEGORY,Any) -> String
+toAst (cat,ast) = case cat of 
       CAT_Prog -> show ((unsafeCoerce# ast)::Prog)
       _       -> describe cat
 
@@ -117,18 +116,18 @@ test filename = do
     let mes = measure $ makeTree file
         tri = measure $ stateToTree mes
         res = results tri
-        fing = fingerprint tri
-    mapM_ putStrLn fing
-    writeFile (filename ++ ".xpm") $ genXPM fing
+    --    fing = fingerprint tri
+    -- mapM_ putStrLn fing
+    -- writeFile (filename ++ ".xpm") $ genXPM fing
     case res of -- borrowed from TestProgram.hs
         [(_,[x],_)] -> do
             putStrLn "Success!"
-            putStrLn $ toAst x
+            -- putStrLn $ toAst x
         xs -> do
             putStrLn "Parse error!"
             forM_ xs $ \(_,parse,_) -> mapM_ (putStrLn . toAst) parse
   where
-    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any,Range)]
+    getTri :: FingerTree LexState Char -> SomeTri [(CATEGORY,Any)]
     getTri tree = measure $ stateToTree $ measure tree
 
 instance Show IntToken where
