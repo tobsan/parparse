@@ -131,8 +131,8 @@
         \item ...which is the same as matrix multiplication...
         \item ...which in turn we only need to do with boolean matrices.
     \end{itemize}
-    Matrix multiplication can be done faster than $O(n^3)$ (but not that much
-    faster)
+    Matrix multiplication can be done faster than $O(n^3)$ (but not
+    \textit{that} much faster)
 \end{frame}
 
 \subsection{Bernardy \& Claessen}
@@ -170,7 +170,8 @@
     \end{code}
 
     Measures are cached at each node in the tree. That, plus the tree structure
-    makes the FingerTree suitable for an incremental approach. 
+    makes the FingerTree suitable for an incremental approach - that can be
+    easily parallelizable.
 \end{frame}
 
 \subsection{Parsing}
@@ -189,24 +190,67 @@ This is done for every \texttt{Char}. Results are combined using
 \texttt{mappend}.
 \end{frame}
 
+\begin{frame}{measure and mappend}
+    \centering
+    \includegraphics[width=.8\textwidth]{tree.eps}
+\end{frame}
+
 % TODO: Something more lightweight first, perhaps
 % TODO: Something with a figure of how they are controlled.
-\begin{frame}[fragile]{Implementation of matrices}
+
+\subsection{Matrices}
+\begin{frame}{Matrix representation}
+    \centering
+    \includegraphics[width=.5\textwidth]{example-matrix-4x4.eps}
+\end{frame}
+
+\begin{frame}[fragile]{Matrix implementation}
 \begin{code}
 data Shape = Bin Shape Shape | Leaf
-
 data Mat :: Shape -> Shape -> * -> * where
-  Quad :: !(Mat x1 y1 a) -> !(Mat x2 y1 a) ->
-          !(Mat x1 y2 a) -> !(Mat x2 y2 a) ->
-          Mat (Bin x1 x2) (Bin y1 y2) a
   Zero :: Mat x y a
-  One :: !a -> Mat Leaf Leaf a
   Row :: Mat x1 Leaf a -> Mat x2 Leaf a -> Mat (Bin x1 x2) Leaf a
   Col :: Mat Leaf y1 a -> Mat Leaf y2 a -> Mat Leaf (Bin y1 y2) a
 
 data SomeTri a where
   T :: Shape' s -> Pair (Mat s s a) -> SomeTri a
 \end{code}
+\end{frame}
+
+\begin{frame}{Parsing as matrix multiplication}
+    Existing implementation using middle element. Insufficient when such an
+    element is missing. \\[.5cm]
+
+    \begin{columns}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{merge-with-element.eps}
+        \end{column}
+        \begin{column}{.4\textwidth}
+            \includegraphics[width=\textwidth]{merge-without-element.eps}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Chopping}
+    \centering
+    \includegraphics[width=.5\textwidth]{merge-with-chopping.eps}
+\end{frame}
+
+\section{Results}
+\begin{frame}{Complete parser}
+    \begin{itemize}
+        \item Lexer and parser generated from BNFC
+        \item Successfully parsing correct input
+        \item Has no error handling
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    Something about the error handling
+\end{frame}
+
+\subsection{Measurements}
+\begin{frame}
 \end{frame}
 
 \begin{frame}
