@@ -6,11 +6,14 @@ import Control.DeepSeq
 import Control.Monad
 import Criterion.Main
 import Criterion.Config
+import Data.FingerTree (measure)
 import qualified Measuring as M
+import qualified Data.Matrix.Quad as Q
 import qualified LexJavalette as L
 import AbsJavalette
+import CnfTablesJavalette
 
-instance NFData Prog where
+instance NFData CATEGORY where
 
 test :: String -> Maybe Prog
 test = M.parse . M.lex . L.makeTree
@@ -29,9 +32,10 @@ runTest :: [FilePath] -> IO ()
 runTest fs = do
     ss <- mapM readFile fs
     let tokens = map (\s -> M.lex (L.makeTree s)) ss
-        parses = map M.measure tokens
+        work ts = map fst $ Q.root $ measure ts
+        parses ts = map measure ts
     defaultMainWith myConfig (return ()) $
-        zipWith (\f ps -> bench f $ nf M.merge ps ps) fs parses
+        zipWith (\f ts -> bench f $ nf work ts) fs tokens
 
 -- TODO: Design this better
 main :: IO ()
