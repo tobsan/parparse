@@ -64,7 +64,8 @@
 \section{Background}
 \begin{frame}{Motivation}
     \begin{itemize}
-        \item Parallelism everywhere
+        \item Parallelism everywhere \\
+              $\rightarrow$ divide-and-conquer algorithms suitable
         \item Syntax highlighting sucks
         \item Parsing is usually linear-ish
     \end{itemize}
@@ -81,8 +82,9 @@
             \item $P$ productions, recursive rules
             \item $S$ start symbol, entrypoint
         \end{itemize}
-        \item Language recognized denoted $L(G)$
-        \item $L(G) = \{w \in \Sigma^* \ |\  S \xRightarrow[G]{*} w\}$
+        \item Backus-Naur Form \\
+              $A ::= a$ \\ 
+              $A ::= BC$
     \end{itemize}
 \end{frame}
 
@@ -90,7 +92,9 @@
 \begin{frame}{CYK algorithm}
     \begin{itemize}
         \item Cocke, Younger and Kasami (60s)
-        \item Recognition matrix for context-free languages
+        \item Grammar in Chomsky Normal Form \\
+              $\rightarrow$ Only binary or unary rules
+        \item Recognition matrix
         \item Not very efficient, $O(n^3)$
     \end{itemize}
 \end{frame}
@@ -104,6 +108,7 @@
     W_{ij}    &= \sum_{k=i+1}^{j} W_{ik} \cdot W_{kj} \\
     x \cdot y &= \{ A | A_0 \in x, A_1 \in y, A ::= A_0A_1 \in P \} \label{abc}
     \end{align*}
+    Anything below the diagonal is 0
 
   \end{column}
 
@@ -124,12 +129,12 @@
 \end{frame}
 
 \subsection{Valiant's algorithm}
-\begin{frame}{Valiant's algorithm}
+\begin{frame}{Valiant's algorithm (1975)}
     \begin{itemize}
         \item Improvement of the CYK algorithm
         \item Context-free recognition is the same as transitive closure...
-        \item ...which is the same as matrix multiplication...
-        \item ...which in turn we only need to do with boolean matrices.
+            \\...which is the same as matrix multiplication
+            \\...which in turn we only need to do with boolean matrices.
     \end{itemize}
     Matrix multiplication can be done faster than $O(n^3)$ (but not
     \textit{that} much faster)
@@ -139,23 +144,29 @@
 \begin{frame}{Recent improvement}
     \begin{itemize}
         \item Bernardy and Claessen (2013)
-        \item For a lot of input, large parts of the matrices will be empty, in
+        \item For a lot of inputs, large parts of the matrices will be empty, in
               fact so empty that we can optimise based on that.
         \item New time complexity: $O(log^3\ n)$
-        \item Took care of linear behaviour by using an oracle
+        \item Took care of linear behaviour by using an oracle \\
+              $\rightarrow$ tagged rules as left or right
     \end{itemize}
 \end{frame}
 
 \section{Implementation}
 
-\subsection{Lexer}
-\begin{frame}{Using a lexer}
+\begin{frame}{Implementation}
     \begin{itemize}
-        \item MSc thesis by Hansson and Hugo
-        \item Input source code as a FingerTree
-        \item Lexing by measuring
+        \item Lexing
+            \begin{itemize}
+                \item Input is FingerTree of characters
+                \item Output is FingerTree of tokens
+            \end{itemize}
+        \item Parsing
+            \begin{itemize}
+                \item Input is FingerTree of Tokens
+                \item Output is Matrix of AST
+            \end{itemize}
     \end{itemize}
-    % TODO: Graphic of tree with code as leaves.
 \end{frame}
 
 \begin{frame}[fragile]{Finger trees}
@@ -171,14 +182,34 @@
 
     Measures are cached at each node in the tree. That, plus the tree structure
     makes the FingerTree suitable for an incremental approach - that can be
-    easily parallelizable.
+    easily parallelizable. Also note the Monoid constraint!
+\end{frame}
+
+\begin{frame}[fragile]{measure and mappend}
+    \begin{code}
+class Monoid a where
+    mempty :: a,
+    mappend :: a -> a -> a
+    \end{code}
+    \includegraphics[width=.6\textwidth]{tree.eps}
+\end{frame}
+
+\subsection{Lexer}
+\begin{frame}{Using a lexer}
+    \begin{itemize}
+        \item MSc thesis by Hansson and Hugo
+        \item Input source code as a FingerTree
+        \item Lexing by measuring \texttt{Char} $\rightarrow$
+              \texttt{FingerTree} of tokens
+    \end{itemize}
+    % TODO: Graphic of tree with code as leaves.
 \end{frame}
 
 \subsection{Parsing}
 \begin{frame}{Idea of parsing}
     \begin{itemize}
         \item Use the same approach as the lexer!
-        \item Lexer measure Char $\rightarrow$ FingerTree of tokens
+        \item Lexer measure \texttt{Char} $\rightarrow$ \texttt{FingerTree} of tokens
         \item Have the parser measure tokens $\rightarrow$ CYK entries
     \end{itemize}
 \end{frame}
@@ -190,17 +221,7 @@ This is done for every \texttt{Char}. Results are combined using
 \texttt{mappend}.
 \end{frame}
 
-\begin{frame}{measure and mappend}
-    \centering
-    \includegraphics[width=.8\textwidth]{tree.eps}
-\end{frame}
-
 \subsection{Matrices}
-\begin{frame}{Matrix representation}
-    \centering
-    \includegraphics[width=.5\textwidth]{example-matrix-4x4.eps}
-\end{frame}
-
 \begin{frame}[fragile]{Matrix implementation}
 \begin{code}
 data Shape = Bin Shape Shape | Leaf
@@ -212,6 +233,11 @@ data Mat :: Shape -> Shape -> * -> * where
 data SomeTri a where
   T :: Shape' s -> Pair (Mat s s a) -> SomeTri a
 \end{code}
+\end{frame}
+
+\begin{frame}{Matrix representation}
+    \centering
+    \includegraphics[width=.5\textwidth]{example-matrix-4x4.eps}
 \end{frame}
 
 \begin{frame}{Parsing as matrix multiplication}
@@ -233,6 +259,16 @@ data SomeTri a where
     \includegraphics[width=.5\textwidth]{merge-with-chopping.eps}
 \end{frame}
 
+\begin{frame}[fragile]{Oracle}
+How to select random bit?
+\begin{code}
+instance Monoid (SomeTri a) where
+    t0 `mappend` t1 = unsafePerformIO $ do
+        b <- randomIO
+        return $ merge b t0 t1
+\end{code}
+\end{frame}
+
 \section{Results}
 \begin{frame}{Complete parser}
     \begin{itemize}
@@ -245,10 +281,9 @@ data SomeTri a where
 \subsection{Error handling}
 \begin{frame}{Error handling}
     \begin{itemize}
-        \item No information about the position of tokens 
-        \item $\rightarrow$ hard to pin-point errors.
-        \item CYK may fail completely or just for some sections.
-        \item $\rightarrow$ has to be handled!
+        \item No information about the position of tokens \\ $\rightarrow$ hard to pin-point errors.
+        \pause
+        \item CYK may fail completely or just for some sections. \\ $\rightarrow$ has to be handled!
         \item CYK may overlap in some sections, what to do?
     \end{itemize}
 \end{frame}
@@ -272,13 +307,17 @@ data SomeTri a where
 
 \subsection{Measurements}
 \begin{frame}{Running time}
-    
+    \begin{itemize}
+        \item Hard to measure, large memory requirements!
+        \item Needs to force evaluation
+        \item But seems to behave
+        \pause
+        \item Calls for further investigation
+    \end{itemize}
 \end{frame}
 
-\begin{frame}
-\end{frame}
-
-\begin{frame}
+\begin{frame}{Graph of running time}
+    \includegraphics[width=\textwidth]{runningtime.eps}
 \end{frame}
 
 \end{document}
