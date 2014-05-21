@@ -66,9 +66,9 @@
     \begin{itemize}
         \item Parallelism everywhere
         \item Syntax highlighting sucks
-        \item Parsing is costly
+        \item Parsing is usually linear-ish
     \end{itemize}
-    We can address all three!
+    We can do better!
 \end{frame}
 
 \subsection{Context-free grammars}
@@ -195,9 +195,6 @@ This is done for every \texttt{Char}. Results are combined using
     \includegraphics[width=.8\textwidth]{tree.eps}
 \end{frame}
 
-% TODO: Something more lightweight first, perhaps
-% TODO: Something with a figure of how they are controlled.
-
 \subsection{Matrices}
 \begin{frame}{Matrix representation}
     \centering
@@ -245,15 +242,37 @@ data SomeTri a where
     \end{itemize}
 \end{frame}
 
-\begin{frame}
-    Something about the error handling
+\subsection{Error handling}
+\begin{frame}{Error handling}
+    \begin{itemize}
+        \item No information about the position of tokens 
+        \item $\rightarrow$ hard to pin-point errors.
+        \item CYK may fail completely or just for some sections.
+        \item $\rightarrow$ has to be handled!
+        \item CYK may overlap in some sections, what to do?
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Overlaps}
+    Overlaps may occur in the parser, depending on the input. In this example we
+    can parse $j-l$ and $k-m$, but not $k-l$ and not $j-m$.
+
+    \begin{tikzpicture}
+      \pgftransformrotate{-90}
+      \pgftransformscale{0.4}
+      \draw (0,0) -- (10,10);
+      \subt 2 6 {$A$};
+      \subt 4 8 {$B$};
+      \mrk 2 {$j$};
+      \mrk 4 {$k$};
+      \mrk 6 {$l$};
+      \mrk 8 {$m$};
+    \end{tikzpicture}
 \end{frame}
 
 \subsection{Measurements}
-\begin{frame}
-\end{frame}
-
-\begin{frame}
+\begin{frame}{Running time}
+    
 \end{frame}
 
 \begin{frame}
