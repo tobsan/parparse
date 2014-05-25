@@ -1,3 +1,5 @@
+% TODO: Nicer syntax highlighting (with colour)
+
 \documentclass[a4paper,12pt,twosided]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{datetime}
@@ -6,9 +8,20 @@
 \usepackage{epstopdf}
 \usepackage{amsmath}
 \usepackage{mathtools}
+
+% Source code listing
 \usepackage{listings}
+\usepackage[usenames, dvipsnames]{color}
+
+%\usepackage{minted}
+%\newenvironment{code}
+%    {\begin{minted}{Haskell}}
+%    {\end{minted}{Haskell}}
+
+% Figures and stuff
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{hyperref}
 
 % Bibliography
 \usepackage[nottoc]{tocbibind}
@@ -18,10 +31,10 @@
 % Chart plotting
 \usepackage{tikz}
 \usepackage{pgfplots}
-\usetikzlibrary{matrix,snakes,patterns}
+\usetikzlibrary{matrix,snakes,patterns, decorations}
 \usetikzlibrary{decorations.pathmorphing}
 \usetikzlibrary{decorations.markings}
-\usetikzlibrary{plotmarks}
+\usetikzlibrary{plotmarks, arrows, shapes}
 \tikzstyle{inChart}=[anchor=north east]
 \tikzstyle{grid}=[loosely dotted] % [ultra thin] % % [dotted]
 \newcommand{\subt}[3] { 
@@ -31,18 +44,21 @@
 \newcommand{\mrk}[2]{\node[inChart] at (#1,#1) {#2}}
 
 % Haskell (and other) source code listing
-\usepackage{listings}
 \lstloadlanguages{Haskell}
 \lstnewenvironment{code}
     {\lstset{}%
       \csname lst@SetFirstLabel\endcsname}
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
+      language=Haskell,
       basicstyle=\small\ttfamily,
       numbers=left,
       frame=single,
+      numberstyle=\color{gray},
       flexiblecolumns=false,
       basewidth={0.5em,0.45em},
+      sensitive=true,
+      otherkeywords={::,:/:,->,=>},
       literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
                {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
                {\\\\}{{\char`\\\char`\\}}1
@@ -112,9 +128,10 @@ longer than neccessary. The concept has been used since the 70s
 \cite{incrementalpaper}, but is especially relevant for code editor purposes,
 where one typically only wants information about the snippet currently displayed
 in the editor. For large files, this can save lots of work, so that rather than
-parsing 1000 lines, one may only have to parse 50 of them. The text editor use
-case has been described in more detail by Bernardy \cite{lazyfunctional} using
-the Yi editor as subject. 
+parsing 1000 lines, one may only have to parse 50 of them. Furthermore, when
+some text is changed, one does not want to redo all work, but rather parse only
+the part that was changed. The text editor use case has been described in more
+detail by Bernardy \cite{lazyfunctional} using the Yi editor as subject. 
 
 \subsection{Parallelism}
 With computer architectures being parallel these days, with the ability to run
@@ -177,12 +194,12 @@ while(i < 5) {
 A generator for incremental divide-and-conquer lexers was developed in 2013 by
 \citet{divconqlex} as a master's thesis. The aim of this thesis is to write an
 incremental divide-and-conquer parser, so their work is well-suited as a
-starting point, and as something to build on. Their lexer utilise Alex for core
-lexing routines and rely heavily on the use of arrays and finger trees, which
-we will see more of later. It is important to be able to use an incremental
-lexer when building an incremental parser, since we would otherwise have to lex
-the whole character stream before even getting to the parsing stage.
-% TODO: Reference Alex
+starting point, and as something to build on. Their lexer utilise Alex
+\cite{alex} for core lexing routines and rely heavily on the use of arrays and
+finger trees, which we will see more of later. It is important to be able to use
+an incremental lexer when building an incremental parser, since we would
+otherwise have to lex the whole character stream before even getting to the
+parsing stage.
 
 \section{Context-free grammars}
 Context-free grammars are a way to describe formal languages, such as
@@ -397,12 +414,12 @@ This looks good, but it has the inherent problem that any code that tries to
 access the head of an empty \texttt{Vec} will compile but result in a runtime error. 
 
 In dependently typed programming, types may contain other types, acting as
-values, so that they relate the same way a value relates to its type. While
-standard Haskell is not a dependently typed programming language, there are ways
-to use dependent types even in Haskell. For our vector example that would look
-something like this:
+values. It can be viewed as a hierarchy with values on the bottom, types in the
+middle and dependent types on top. While standard Haskell is not a dependently
+typed programming language, there are ways to use dependent types even in
+Haskell. For our vector example that would look something like this:
+% TODO: Perhaps values/types/dep types deserve a longer explanation?
 
-TODO: Clarify the relationship between types, values and kinds. 
 \begin{figure}[H]
 \begin{code}
 data Nat = Z | S Nat
@@ -463,7 +480,7 @@ regular balanced binary trees.
 \subsection{Measuring and Monoids}
 Two specific features in the general \texttt{FingerTree} data type are
 \textit{monoids} and \textit{measuring}. These are fundamental to the parser, so
-we will look more deeply into them here.
+we will look more deeply into them here. 
 
 A \textit{monoid} is a mathematical object with an identity element and an
 associative operation. In Haskell, monoids are provided by writing instances of
@@ -514,8 +531,8 @@ empty :: Measured v a => FingerTree v a
 \caption{Measuring and the \texttt{FingerTree} type. The \texttt{Measured} class
 is constrained on both the existance of a monoid instance and the existance of a
 functional dependency between \texttt{a} and \texttt{v}, so that a value of type
-\texttt{v} can be determined from having only a value of type \texttt{a}.}
-% TODO: Cite http://www.haskell.org/ghc/docs/latest/html/users_guide/type-class-extensions.html#functional-dependencies
+\texttt{v} can be determined from having only a value of type \texttt{a}
+\cite{fundeps}.}
 \end{figure}
 
 This means that, in order to use the \texttt{FingerTree}, one need to fulfil a
@@ -727,10 +744,9 @@ one character by just measuring at one leaf, as shown in figure
 When merging the matrices, combining elements to create new, larger matrices, it
 is important to keep the sizes of these matrices correct to avoid bugs that
 would be hard to catch otherwise. The way this is done in the library available
-in BNFC is by using dependent types. The existing code for merging could not be
-used, but had to be extended to work in the tree/monoid setting. More on this
-later.
-% TODO: Referens till repo-forken.
+in BNFC is by using dependent types \cite{jyp-bnfc}. The existing code for
+merging could not be used, but had to be extended to work in the tree/monoid
+setting. More on this later.
 
 First, the matrix type \texttt{Mat} is dependent on another type,
 \texttt{Shape}, that describes the shape of a matrix as a binary tree.
@@ -754,25 +770,94 @@ type. Note that shapes are used both for x- and y-axis size}
 
 Here are some example matrices, just to get a feel for how they are constructed.
 \begin{figure}[H]
-\begin{subfigure}[H]{.3\textwidth}
-\includegraphics[width=120pt]{example-matrix-4x4.eps}
-\caption{\texttt{Quad q1 q2 q3 q4} where q1-q4 are \texttt{Quad a b c d}} 
+\begin{subfigure}[t]{.3\textwidth}
+  \centering
+  \begin{tikzpicture}
+    \pgftransformscale{1.0}
+    % Lower left
+    \draw[very thick] (0,0) -- (0,2);
+    \draw[very thick] (0,0) -- (2,0);
+    \draw[very thick] (2,0) -- (2,2);
+    \draw[very thick] (0,2) -- (2,2);
+    \draw (0,1) -- (2,1);
+    \draw (1,0) -- (1,2);
+    \node[inChart] at (1,2) {$q3$};
+    
+    % Lower right
+    \draw[very thick] (2,0) -- (4,0);
+    \draw[very thick] (2,2) -- (4,2);
+    \draw[very thick] (4,0) -- (4,2);
+    \draw (3,0) -- (3,2);
+    \draw (2,1) -- (4,1);
+    \node[inChart] at (3,2) {$q4$};
+
+    % Upper left
+    \draw[very thick] (0,2) -- (0,4);
+    \draw[very thick] (2,2) -- (2,4);
+    \draw[very thick] (0,4) -- (2,4);
+    \draw (1,2) -- (1,4); 
+    \draw (0,3) -- (2,3);
+    \node[inChart] at (1,4) {$q1$};
+
+    % Upper right
+    \draw[very thick] (2,4) -- (4,4);
+    \draw[very thick] (4,2) -- (4,4);
+    \draw (2,3) -- (4,3);
+    \draw (3,2) -- (3,4);
+    \node[inChart] at (3,4) {$q2$};
+
+    % x-axis shape
+    \node at (0,4) [above = 3mm, right = 0mm] {\tiny \textsc{Bin (Bin Leaf Leaf) (Bin Leaf Leaf)}};
+    % y-axis shape
+    \node at (0,0) [rotate = 90, above = 3mm, right = 0mm] 
+        {\tiny \textsc{Bin (Bin Leaf Leaf) (Bin Leaf Leaf)}};
+  \end{tikzpicture}
+\caption{\texttt{Quad q1 q2 q3 q4}, q1-q4 are \texttt{Quad a b c d}} 
 \end{subfigure}
 \hfill
-\begin{subfigure}[H]{.3\textwidth}
-\includegraphics[width=120pt]{example-matrix-2x4.eps}
-\caption{\texttt{Quad r1 r2 r3 r4} where r1-r4 are \texttt{Row a b}}
+\begin{subfigure}[t]{.3\textwidth}
+    \centering
+    \begin{tikzpicture}
+        \draw[very thick] (0,0) -- (4,0);
+        \draw[very thick] (0,2) -- (4,2);
+        \draw[very thick] (0,0) -- (0,2);
+        \draw[very thick] (2,0) -- (2,2);
+        \draw[very thick] (4,0) -- (4,2);
+        \draw[very thick] (0,1) -- (4,1);
+        \draw (1,0) -- (1,2);
+        \draw (3,0) -- (3,2);
+        \node[inChart] at (1,2) {$r1$};
+        \node[inChart] at (3,2) {$r2$};
+        \node[inChart] at (1,1) {$r3$};
+        \node[inChart] at (3,1) {$r4$};
+        \node at (0,2) [above = 3mm, right = 0mm] {\tiny \textsc{Bin (Bin Leaf Leaf) (Bin Leaf Leaf)}};
+        \node at (0,0) [rotate = 90, above = 3mm, right = 0mm] {\tiny \textsc{Bin Leaf Leaf}};
+    \end{tikzpicture}
+\caption{\texttt{Quad r1 r2 r3 r4}, r1-r4 are \texttt{Row a b}}
 \end{subfigure}
 \hfill
-\begin{subfigure}[H]{.3\textwidth}
-\includegraphics[height=120pt]{example-matrix-3x1.eps}
+\begin{subfigure}[t]{.2\textwidth}
+%\includegraphics[height=120pt]{example-matrix-3x1.eps}
+    \centering
+    \begin{tikzpicture}
+        \draw[very thick] (0,0) -- (0,3);
+        \draw[very thick] (0,0) -- (1,0);
+        \draw[very thick] (0,3) -- (1,3);
+        \draw[very thick] (1,0) -- (1,3);
+        \draw (0,1) -- (1,1);
+        \draw[very thick] (0,2) -- (1,2);
+        \node[inChart] at (1,1) {$a$};
+        \node[inChart] at (1,2) {$b$};
+        \node[inChart] at (1,3) {$c$};
+        \node at (0,3) [above = 3mm, right = 0mm] {\tiny \textsc{Leaf}};
+        \node at (0,0) [rotate = 90, above = 3mm, right = 0mm] {\tiny
+        \textsc{Bin (Bin Leaf Leaf) Leaf}};
+
+    \end{tikzpicture}
 \caption{\texttt{Col (Col a b) c)}}
 \end{subfigure}
 \caption{Example matrices with their \texttt{Shape}s written out, and the
 \texttt{Mat} constructor used to create them}
-% TODO: Colour-code as suggested by solarus
-% TODO: Fix the damn lines better
-
 \end{figure}
 
 In a setting without using finger trees and monoids, such as the reference
@@ -784,17 +869,121 @@ small void in the merged matrix, as illustrated in figure \ref{mergein}.
 
 \begin{figure}[H]
 \centering
-\begin{subfigure}[H]{.45\textwidth}
-\includegraphics[width=.9\textwidth]{merge-with-element.eps}
+\begin{subfigure}[t]{.45\textwidth}
+    \begin{tikzpicture}
+        \pgftransformscale{0.6};
+        % Outer shell
+        \draw[very thick] (0,0) -- (0,8);
+        \draw[very thick] (4,0) -- (4,8);
+        \draw[very thick] (0,0) -- (8,0);
+        \draw[very thick] (0,4) -- (8,4);
+        \draw[very thick] (0,8) -- (8,8);
+        \draw[very thick] (8,0) -- (8,8);
+        % Left input matrix
+        \draw (0,5) -- (4,5);
+        \draw (0,6) -- (4,6);
+        \draw (0,7) -- (4,7);
+        \draw (1,4) -- (1,8);
+        \draw (2,4) -- (2,8);
+        \draw (3,4) -- (3,8);
+        \node[inChart] at (2,8) {$X$};
+        \node[inChart] at (3,7) {$Y$};
+        \node[inChart] at (4,6) {$Z$};
+        % Right input matrix
+        \draw (4,3) -- (8,3);
+        \draw (4,2) -- (8,2);
+        \draw (4,1) -- (8,1);
+        \draw (5,0) -- (5,4);
+        \draw (6,0) -- (6,4);
+        \draw (7,0) -- (7,4);
+        \node[inChart] at (6,4) {$A$};
+        \node[inChart] at (7,3) {$B$};
+        \node[inChart] at (8,2) {$C$};
+        \node[inChart] at (7,4) {$D$};
+        \node[inChart] at (8,4) {$E$};
+        % Bottom left empty matrix
+        \draw[dotted] (0,1) -- (4,1);
+        \draw[dotted] (0,2) -- (4,2);
+        \draw[dotted] (0,3) -- (4,3);
+        \draw[dotted] (1,0) -- (1,4);
+        \draw[dotted] (2,0) -- (2,4);
+        \draw[dotted] (3,0) -- (3,4);
+        \node at (2,2) {\Huge $Z$};
+        % Top right matrix
+        \draw[dotted] (5,4) -- (5,8);
+        \draw[dotted] (6,4) -- (6,8);
+        \draw[dotted] (7,4) -- (7,8);
+        \draw[dotted] (4,5) -- (8,5);
+        \draw[dotted] (4,6) -- (8,6);
+        \draw[dotted] (4,7) -- (8,7);
+        \node[circle, draw, align=center, inChart] at (5,5) {$P$};
+        \node[rectangle, draw, fill=white] at (4,6) [right=1mm] {\small $V(Left, P, Right)$};
+        \draw [thick, ->] (5,5) to (6.7,5.7);
+        % Information outside matrices
+        \node at (0,6) [rotate=90, above=0mm] {Left};
+        \node at (8,2) [rotate=-90, above=0mm] {Right};
+    \end{tikzpicture}
+
 \caption{Merging with middle element, as done by \citet{parparsepaper}}
 \end{subfigure}
 \hfill
-\begin{subfigure}[H]{.45\textwidth}
-\includegraphics[width=.9\textwidth]{merge-without-element.eps}
-\caption{Merge without middle element}
+\begin{subfigure}[t]{.45\textwidth}
+    \begin{tikzpicture}
+        \pgftransformscale{0.6};
+        % Outer shell
+        \draw[very thick] (0,0) -- (0,8);
+        \draw[very thick] (4,0) -- (4,8);
+        \draw[very thick] (0,0) -- (8,0);
+        \draw[very thick] (0,4) -- (8,4);
+        \draw[very thick] (0,8) -- (8,8);
+        \draw[very thick] (8,0) -- (8,8);
+        % Left input matrix
+        \draw (0,5) -- (4,5);
+        \draw (0,6) -- (4,6);
+        \draw (0,7) -- (4,7);
+        \draw (1,4) -- (1,8);
+        \draw (2,4) -- (2,8);
+        \draw (3,4) -- (3,8);
+        \node[inChart] at (2,8) {$X$};
+        \node[inChart] at (3,7) {$Y$};
+        \node[inChart] at (4,6) {$Z$};
+        % Right input matrix
+        \draw (4,3) -- (8,3);
+        \draw (4,2) -- (8,2);
+        \draw (4,1) -- (8,1);
+        \draw (5,0) -- (5,4);
+        \draw (6,0) -- (6,4);
+        \draw (7,0) -- (7,4);
+        \node[inChart] at (6,4) {$A$};
+        \node[inChart] at (7,3) {$B$};
+        \node[inChart] at (8,2) {$C$};
+        \node[inChart] at (7,4) {$D$};
+        \node[inChart] at (8,4) {$E$};
+        % Bottom left empty matrix
+        \draw[dotted] (0,1) -- (4,1);
+        \draw[dotted] (0,2) -- (4,2);
+        \draw[dotted] (0,3) -- (4,3);
+        \draw[dotted] (1,0) -- (1,4);
+        \draw[dotted] (2,0) -- (2,4);
+        \draw[dotted] (3,0) -- (3,4);
+        \node at (2,2) {\Huge $Z$};
+        % Top right matrix
+        \draw[dotted] (5,4) -- (5,8);
+        \draw[dotted] (6,4) -- (6,8);
+        \draw[dotted] (7,4) -- (7,8);
+        \draw[dotted] (4,5) -- (8,5);
+        \draw[dotted] (4,6) -- (8,6);
+        \draw[dotted] (4,7) -- (8,7);
+        \node[circle, draw, align=center, inChart] at (5,5) {\hspace{5mm}};
+        \node[rectangle, draw, fill=white] at (4,6) [right=1mm] {\small $V(Left, ?, Right)$};
+        \draw [thick, ->] (6.9,5.7) to (5,5);
+        % Information outside matrices
+        \node at (0,6) [rotate=90, above=0mm] {Left};
+        \node at (8,2) [rotate=-90, above=0mm] {Right};
+    \end{tikzpicture}
+\caption{Merge without middle element -- the diagonal is broken!}
 \end{subfigure}
-\caption{\label{mergein}Merging with and without a single element as glue.
-Without an element the diagonal is broken -- we cannot continue!}
+\caption{\label{mergein}Merging with and without a single element as glue.}
 \end{figure}
 
 Because of the absence of an extra element, the existing function
@@ -806,7 +995,53 @@ and recompute all but the leftmost elements when applying V. \label{chopsection}
 
 \begin{figure}
 \centering
-\includegraphics[width=.5\textwidth]{merge-with-chopping.eps}
+    \begin{tikzpicture}
+        \pgftransformscale{0.8};
+        % Outer shell
+        \draw[very thick] (0,0) -- (0,7);
+        \draw[very thick] (0,0) -- (7,0);
+        \draw[very thick] (0,7) -- (7,7);
+        \draw[very thick] (7,0) -- (7,7);
+        \draw[very thick] (0,3) -- (7,3);
+        \draw[very thick] (4,0) -- (4,7);
+        % Left input matrix
+        \draw (0,4) -- (4,4);
+        \draw (0,5) -- (4,5);
+        \draw (0,6) -- (4,6);
+        \draw (1,3) -- (1,7);
+        \draw (2,3) -- (2,7);
+        \draw (3,3) -- (3,7);
+        \node[inChart] at (2,7) {\Large$X$};
+        \node[inChart] at (3,6) {\Large$Y$};
+        \node[inChart] at (4,5) {\Large$Z$};
+        % Chopped right input matrix
+        \draw (4,1) -- (7,1);
+        \draw (4,2) -- (7,2);
+        \draw (5,0) -- (5,3);
+        \draw (6,0) -- (6,3);
+        \node[inChart] at (6,3) {\Large$B$};
+        \node[inChart] at (7,2) {\Large$C$};
+        % Bottom left empty matrix
+        \draw[dotted] (0,1) -- (4,1);
+        \draw[dotted] (0,2) -- (4,2);
+        \draw[dotted] (0,3) -- (4,3);
+        \draw[dotted] (1,0) -- (1,3);
+        \draw[dotted] (2,0) -- (2,3);
+        \draw[dotted] (3,0) -- (3,3);
+        \node at (2,1.5) {\Huge $Z$};
+        % Upper right matrix
+        \draw[dotted] (5,3) -- (5,7);
+        \draw[dotted] (6,3) -- (6,7);
+        \draw[dotted] (4,4) -- (7,4);
+        \draw[dotted] (4,5) -- (7,5);
+        \draw[dotted] (4,6) -- (7,6);
+        \node[circle, draw, align=center, inChart] at (5,4) {\Large $A$};
+        \node[rectangle, draw, fill=white] at (4,5) [right=1mm] {\small $V(Left, A, Right')$};
+        \draw [thick, ->] (5,4) to (6.2,4.8);
+        \node at (0,5) [rotate=90, above=0mm] {Left};
+        \node at (7,1.5) [rotate=-90, above=0mm] {Right'};
+
+    \end{tikzpicture}
 \caption{\label{chopmerge}Successful merge without a middle element. The first
 row on the right matrix is chopped off, we discard elements D and E and put A in
 the leftmost bottom position, placing it just above the diagonal as wanted.}
@@ -954,8 +1189,18 @@ token is placed. The parser can also recognise that the input tokens does not
 follow the grammar of the language, but it cannot give any information about
 where the syntactic error was made.
 
-\section{Possible text editor setting}
-TODO: Write something here that connects to the motivation
+\section{Possible text editor usage}
+One of the motivations for writing this thesis was possible usage of the parsing
+algorithm in a text editor, where speed is of the essence, but where one does
+not want to redo the whole parsing when just small parts are updated. What we
+can see from the results is that we have managed to, through the use of the
+\texttt{FingerTree} data structure, to achieve an incremental implementation.
+Furthermore, the same data structure also enables use of divide-and-conquer
+techniques to parallelize the algorithm. 
+
+If this algorithm was to be used in an editor, care would need to be taken when
+handling any parse errors, and in order to use it at all, position information
+is absolutely essential. This is discussed more in section \ref{futurework}.
 
 \section{Testing}
 Being able to generate lexer and parser using BNFC, only needing a LBNF grammar
@@ -969,18 +1214,17 @@ Testing was not automated, but instead simple input files were used, where the
 source code was either correct or had some syntax error. This proved to be
 sufficient for this project, but for future versions, when hand-written cases
 might not be enough to cover all trivial uses, one would probably want to have
-tests generated by something like quickcheck. Although one would probably get
-quite far by being systematic and using the given grammar as a base for test
-cases. 
-% TODO: Cite quickcheck
+tests generated by something like quickcheck \cite{quickcheck}. Although one
+would probably get quite far by being systematic and using the given grammar as
+a base for test cases. 
 
 \section{Measurements}
-% TODO: Cite criterion
-We have been using criterion as a benchmarking library to test the
-implementation. Benchmarking included both measuring of the merge step with two
-previously parsed subtrees as well as measuring the time to parse input of
+We have been using criterion \cite{criterion} as a benchmarking library to test
+the implementation. Benchmarking included both measuring of the merge step with
+two previously parsed subtrees as well as measuring the time to parse input of
 increasing sizes. Most measuring was done on a computer running an Intel i7
 processor clocked at 3.40 GHz, with a sample size of 1000. 
+% TODO: Describe the measurements in more detail
 
 It should be noted that testing large inputs for this project has been hard due
 to large memory consumption, possibly owing to the structure of the lexer.
@@ -1070,6 +1314,7 @@ pattern matching was worth it to avoid the extra work needed every time a
 width, respectively.  
 
 \section{Future work}
+\label{futurework}
 The result of this project is a parser that can parse correct input and does
 that well. There are two main features missing however; position information on
 tokens, and good error reporting.
