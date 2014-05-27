@@ -766,14 +766,120 @@ The call to combine in figure \ref{parsemonoid} is the programming version of
 checking if there exists a rule on the form $A ::= BC$ in the grammar.
 
 \begin{figure}[H]
-\centering
-\includegraphics[width=.5\textwidth]{tree.eps}
+    \centering
+    \begin{tikzpicture}
+        \tikzset{
+          vertex/.style = {shape=circle,draw,minimum size=1.5em, text centered, align=center},
+          edge/.style = {->,> = latex'},
+          open/.style = {->,> = open triangle 60}
+        }
+        % Input data
+        \node[rectangle, draw, text centered] (input) at (3,16) {$x = 5;$};
+        % Fingertree of chars
+        \node[vertex] (a) at (3,15) {};
+        \node[vertex] (b) at (1,14.5) {};
+        \node[vertex] (c) at (5,14.5) {};
+        \node[vertex] (x) at (0,14) {x};
+        \node[vertex] (eq) at (2,14) {=};
+        \node[vertex] (fi) at (4,14) {5};
+        \node[vertex] (se) at (6,14) {$;$};
+        \draw[open] (input) -- (a);
+        \draw (a) -- (b);
+        \draw (a) -- (c);
+        \draw (b) -- (x);
+        \draw (b) -- (eq);
+        \draw (c) -- (fi);
+        \draw (c) -- (se);
+        % Measuring chars to token
+        \node[vertex] (ls1) at (0,12.5) {\tiny Lex-\\[-3mm]\tiny state};
+        \node[vertex] (ls2) at (2,12.5) {\tiny Lex-\\[-3mm]\tiny state};
+        \node[vertex] (ls3) at (4,12.5) {\tiny Lex-\\[-3mm]\tiny state};
+        \node[vertex] (ls4) at (6,12.5) {\tiny Lex-\\[-3mm]\tiny state};
+        \draw[edge] (x) -- (ls1) node[midway, left] {\tiny $measure$};
+        \draw[edge] (eq) -- (ls2) node[midway, left] {\tiny $measure$};
+        \draw[edge] (fi) -- (ls3) node[midway, left] {\tiny $measure$};
+        \draw[edge] (se) -- (ls4) node[midway, left] {\tiny $measure$};
+        % Mappend lexstates
+        \node[vertex] (ls5) at (1,11) {\tiny Lex-\\[-3mm]\tiny state};
+        \node[vertex] (ls6) at (5,11) {\tiny Lex-\\[-3mm]\tiny state};
+        \node[vertex] (ls7) at (3,9.5) {\tiny Lex-\\[-3mm]\tiny state};
+        \node at (1,12) {\tiny $mappend$};
+        \node at (5,12) {\tiny $mappend$};
+        \node at (3,10.2) {\tiny $mappend$};
+        \draw[edge] (ls1) -- (ls5);
+        \draw[edge] (ls2) -- (ls5);
+        \draw[edge] (ls3) -- (ls6);
+        \draw[edge] (ls4) -- (ls6);
+        \draw[edge] (ls5) -- (ls7);
+        \draw[edge] (ls6) -- (ls7);
+        % Fingertree of tokens
+        \node[vertex] (d) at (3,8) {};
+        \node[vertex] (e) at (1,7.5) {};
+        \node[vertex] (f) at (5,7.5) {};
+        \node[vertex] (t1) at (0,6.5) {\tiny Tok\\[-3mm]\tiny TV x};
+        \node[vertex] (t2) at (2,6.5) {\tiny Tok\\[-3mm]\tiny TS =};
+        \node[vertex] (t3) at (4,6.5) {\tiny Tok\\[-3mm]\tiny TI 5};
+        \node[vertex] (t4) at (6,6.5) {\tiny Tok\\[-3mm]\tiny TS ;};
+        \draw[open] (ls7) -- (d);
+        \draw (d) -- (e);
+        \draw (d) -- (f);
+        \draw (e) -- (t1);
+        \draw (e) -- (t2);
+        \draw (f) -- (t3);
+        \draw (f) -- (t4);
+        % Measuring tokens to matrices
+        \node[vertex] (st1) at (0,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st2) at (2,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st3) at (4,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st4) at (6,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \draw[edge] (t1) -- (st1) node[midway, left] {\tiny $measure$};
+        \draw[edge] (t2) -- (st2) node[midway, left] {\tiny $measure$};
+        \draw[edge] (t3) -- (st3) node[midway, left] {\tiny $measure$};
+        \draw[edge] (t4) -- (st4) node[midway, left] {\tiny $measure$};
+        % Mappend matrices
+        \node[vertex] (st5) at (1,3) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st6) at (5,3) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st7) at (3,1.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \draw[edge] (st1) -- (st5);
+        \draw[edge] (st2) -- (st5);
+        \draw[edge] (st3) -- (st6);
+        \draw[edge] (st4) -- (st6);
+        \draw[edge] (st5) -- (st7);
+        \draw[edge] (st6) -- (st7);
+        \node at (1,4) {\tiny $mappend$};
+        \node at (5,4) {\tiny $mappend$};
+        \node at (3,2.3) {\tiny $mappend$};
+        % Output is an AST
+        \node[rectangle, draw, text centered] (ast) at (3,-.5) {AST};
+        \draw[open] (st7) -- (ast);
+        % Draw box around measuring parts
+        \draw (-1,0.3) -- (7,0.3);
+        \draw (-1,0.3) -- (-1,5.3);
+        \draw (7,0.3) -- (7,5.3);
+        \draw (-1,5.3) -- (7,5.3);
+        \draw (-1,8.7) -- (7,8.7);
+        \draw (-1,8.7) -- (-1,13.2);
+        \draw (-1,13.2) -- (7,13.2);
+        \draw (7,13.2) -- (7,8.7);
+        % Write text in the boxes
+        \node[align=left] at (0.8,0.8) 
+            {\tiny Result of parsing is a state \\[-3mm]
+             \tiny of matrices (SomeTri) that \\[-3mm]
+             \tiny contain what will be the AST};
+        \node[align=left] at (0.6,9.1)
+            {\tiny Result of lexing is a state \\[-3mm]
+             \tiny contining a \texttt{FingerTree} \\[-3mm]
+             \tiny of lexed tokens};
+    
+    \end{tikzpicture}
 \caption{\label{treemeasure}Graphical representation of lexing and parsing using
 trees, with the measured parts enclosed in rectangles. Note that this is still a
 simplification, all calls to \texttt{mappend} are not neccessary in order to
 move forward in the process, and it is indeed possible to get an AST from just
 one character by just measuring at one leaf, as shown in figure
-\ref{pipelinedia}.}
+\ref{pipelinedia}. It is also worth mentioning that the measure step in the
+lexer creates an output state for every \textit{possible} input state, leading
+to high memory consumption.}
 \end{figure}
 
 \subsection{Dependently typed programming with charts}
