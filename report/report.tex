@@ -1,5 +1,3 @@
-% TODO: Nicer syntax highlighting (with colour)
-
 \documentclass[a4paper,12pt,twosided]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{datetime}
@@ -22,11 +20,6 @@
 % Source code listing
 \usepackage{listings}
 \usepackage[usenames, dvipsnames]{color}
-
-%\usepackage{minted}
-%\newenvironment{code}
-%    {\begin{minted}{Haskell}}
-%    {\end{minted}{Haskell}}
 
 % Figures and stuff
 \usepackage{float}
@@ -112,16 +105,17 @@ thesis would not have been possible without you.
 %
 
 \chapter{Background}
-%TODO: Write something here. How to make this nice with introduction stuff?
-
-\section{Introduction}
 The topic of this thesis is about \textbf{parsing} in an \textbf{incremental}
 fashion that can easily be \textbf{parallelizable}, using a
-\textbf{divide-and-conquer approach}. In this section, we give a brief
-explanation of the topics involved, and end with a motivation for why this is
-interesting in the first place. Later in this chapter, the concept of
-dependently typed programming will be discussed, because it is a technique used
-in the implementation of the parser.
+\textbf{divide-and-conquer approach}. First, we will look at the involved
+topics, and later in this chapter, the concept of dependently typed programming
+will be discussed, because it is a technique used in the implementation of the
+parser.
+
+\section{Topics involved}
+In this section, we give a brief explanation of the topics involved in the
+implementation of this parser algorithm, and end with a motivation for why this
+is interesting in the first place. 
 
 \subsection{Divide-and-conquer}
 One important class of algorithms in computer science are divide-and-conquer 
@@ -144,21 +138,17 @@ finite alphabet, such a reduction can be made in a way that is associative, thus
 preserving the structure of the input. 
 
 \subsection{Incrementality}
-% TODO: Caching, doing as little as possible when changes occur.
-% TODO: Interactive system bla bla. Like makefiles work!
-Doing something incrementally means that one does it step by step, and not
-longer than neccessary. The concept has been used since the 70s
-\cite{incrementalpaper}, but is especially relevant for code editor purposes,
-where one typically only wants information about the snippet currently displayed
-in the editor. For large files, this can save lots of work, so that rather than
-parsing 1000 lines, one may only have to parse 50 of them. Furthermore, when
-some text is changed, one does not want to redo all work, but rather parse only
-the part that was changed. The text editor use case has been described in more
-detail by \cite{lazyfunctional} using the Yi editor as subject. 
+In an interactive system, such as a text editor, one typically want to do as
+little work as possible when some input in the system is changed. For the text
+editor case, we do not want to recompute all syntax highlighting information when
+just one word is changed. Techniques capturing this behaviour are said to work
+\textit{incrementally}, and was perhaps first described by
+\cite{incrementalpaper}. In a setting with lazy evaluation, it can be
+especially interesting to use, as shown by \cite{lazyfunctional}.
 
 \subsection{Parallelism}
 With computer architectures being parallel these days, with the ability to run
-many threads simultaneosly, writing code that can be parallelized is crucial to
+many threads simultaneously, writing code that can be parallelized is crucial to
 make use of these features, and thus having code that run physically in
 parallel. Because divide-and-conquer algorithms usually work on several
 independent sub-problems, they are well-suited for parallelization. For this to
@@ -238,10 +228,10 @@ symbol, where $S \in V$.
 
 The language recognised by a context-free grammar $G$ is denoted $L(G)$ and is
 defined as 
-\[
-L(G) = \{w \in \Sigma^* \ |\  S \xRightarrow[G]{*} w\}
-\]
-% TODO: Describe the double arrow better (see parparse)
+\begin{align*}
+\alpha A \beta & \xRightarrow\ \alpha \gamma \beta \text{ iff. (A ::= }\gamma \in P) \\
+L(G) &= \{w \in \Sigma^* \ |\  S \xRightarrow[G]{*} w\}
+\end{align*}
 That is, all words in the language that can be derived by recursively applying
 rules from the grammar when starting from the start symbol (denoted by the
 double arrow; * for closure, G for the grammar) \cite[p.  177]{automatabook}. A
@@ -274,7 +264,7 @@ R &\rightarrow false
 
 \subsection{Chomsky Normal Form}
 Chomsky Normal Form (CNF) is a canonical way to write context-free grammars that
-was first described by \citet{synstruct}. Productions in CNF are restricted to
+was first described by \citet{chomskycnf}. Productions in CNF are restricted to
 the following forms:
 
 \begin{figure}[H]
@@ -373,7 +363,7 @@ the grammar rules are then applied recursively using dynamic programming.
 \end{figure}
 
 \subsection{Valiant}
-\citet{Valiant75} improved the CYK algorithm by showing that
+\citeauthor{Valiant75} improved the CYK algorithm by showing that
 context-free recognition can be reduced to matrix multiplication of boolean
 matrices \cite{Valiant75}. This was done by first reducing recognition to the
 transitive closure of upper-triangual matrices.  The closure of a matrix $W$,
@@ -381,7 +371,13 @@ denoted $W^+$, is defined as the matrix $C$ such as $C = C \cdot C + W$.
 Valiant then showed that closure could be reduced to matrix multiplication by
 employing a divide-and-conquer approach, and furthermore only having to consider
 boolean matrices. 
-% TODO: Describe, or at least mention the V function.
+
+Most important for this project, the step to reduce closure to matrix
+multiplication described a recursive function that we will call $V$, such that
+given input matrices $A$ and $B$, and a partial matrix $X$ only used for strings
+that starts in $A$ and ends in $B$, it computes a matrix $Y$, where $Y = AY + YB
++ X$ \cite{parparsepaper}. The function V is responsible for parsing $Z ::= XY$
+in figure \ref{exchart} above.
 
 \subsection{Improvement by \citeauthor{parparsepaper}}
 \citet{parparsepaper} showed that for many inputs, most of the matrices
@@ -501,6 +497,7 @@ Except for the concepts related to measuring, the reader can think of these as
 regular balanced binary trees. 
 
 \subsection{Measuring and Monoids}
+\label{measuremonoids}
 Two specific features in the general \texttt{FingerTree} data type are
 \textit{monoids} and \textit{measuring}. These are fundamental to the parser, so
 we will look more deeply into them here. 
@@ -554,9 +551,9 @@ empty :: Measured v a => FingerTree v a
 \caption{Measuring and the \texttt{FingerTree} type. The \texttt{Measured} class
 is constrained on both the existence of a monoid instance and the existance of a
 functional dependency between \texttt{a} and \texttt{v}, so that the type
-\texttt{v} can be determined from having only type \texttt{a} \cite{fundeps}.} 
+\texttt{v} can be uniquely determined from having only type \texttt{a}
+\cite{fundeps}.} 
 \end{figure}
-% TODO: Read up on functional dependencies, paper by Jones (2000)
 
 This means that, in order to use the \texttt{FingerTree}, one need to fulfil a
 few criteria first. Let us say you want to have a \texttt{FingerTree} of
@@ -588,7 +585,7 @@ An important feature of the \texttt{FingerTree} type, especially in an increment
 setting such as in a text editor, is that measures are cached at each node. An
 update at one node does not force recomputation of the measure for the whole
 tree, but only for the nodes leading to the changed node, which are no more than
-$O(log\ n)$. 
+$O(log\ n)$, i.e. the height of the tree. 
 
 \section{Lexing}
 For lexing code into tokens, the results from the LexGen project was used.
@@ -699,9 +696,10 @@ instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
 \caption{\label{parsemeasure} Measure from token to upper-triangular matrix. The
 \texttt{T} construct guarantees a square matrix of a given size. The call to
 \texttt{quad} makes sure the observation about empty matrices by
-\citet{parparsepaper} is handled properly when creating a matrix.}
+\citet{parparsepaper} is handled properly when creating a matrix. The
+\texttt{intToToken} function is an auxiliary which is due to implementation
+details in the lexer.}
 \end{figure}
-% TODO: Look up the intToToken stuff. Is it even neccessary?
 
 We create a 2x2 matrix, and place the lexed token in the upper-right corner
 -- just above the diagonal. If the lexer did not return a token, a zero matrix
@@ -842,41 +840,41 @@ checking if there exists a rule on the form $A ::= BC$ in the grammar.
         \draw (f) -- (t3);
         \draw (f) -- (t4);
         % Measuring tokens to matrices
-        \node[vertex] (st1) at (0,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
-        \node[vertex] (st2) at (2,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
-        \node[vertex] (st3) at (4,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
-        \node[vertex] (st4) at (6,4.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st1) at (0,4.8) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st2) at (2,4.8) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st3) at (4,4.8) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st4) at (6,4.8) {\tiny Some-\\[-3mm]\tiny Tri};
         \draw[edge] (t1) -- (st1) node[midway, left] {\tiny $measure$};
         \draw[edge] (t2) -- (st2) node[midway, left] {\tiny $measure$};
         \draw[edge] (t3) -- (st3) node[midway, left] {\tiny $measure$};
         \draw[edge] (t4) -- (st4) node[midway, left] {\tiny $measure$};
         % Mappend matrices
-        \node[vertex] (st5) at (1,3) {\tiny Some-\\[-3mm]\tiny Tri};
-        \node[vertex] (st6) at (5,3) {\tiny Some-\\[-3mm]\tiny Tri};
-        \node[vertex] (st7) at (3,1.5) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st5) at (1,3.2) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st6) at (5,3.2) {\tiny Some-\\[-3mm]\tiny Tri};
+        \node[vertex] (st7) at (3,1.8) {\tiny Some-\\[-3mm]\tiny Tri};
         \draw[edge] (st1) -- (st5);
         \draw[edge] (st2) -- (st5);
         \draw[edge] (st3) -- (st6);
         \draw[edge] (st4) -- (st6);
         \draw[edge] (st5) -- (st7);
         \draw[edge] (st6) -- (st7);
-        \node at (1,4) {\tiny $mappend$};
-        \node at (5,4) {\tiny $mappend$};
-        \node at (3,2.3) {\tiny $mappend$};
+        \node at (1,4.2) {\tiny $mappend$};
+        \node at (5,4.2) {\tiny $mappend$};
+        \node at (3,2.5) {\tiny $mappend$};
         % Output is an AST
-        \node[rectangle, draw, text centered] (ast) at (3,-.5) {AST};
+        \node[rectangle, draw, text centered] (ast) at (3,0) {AST};
         \draw[open] (st7) -- (ast);
         % Draw box around measuring parts
-        \draw (-1,0.3) -- (7,0.3);
-        \draw (-1,0.3) -- (-1,5.3);
-        \draw (7,0.3) -- (7,5.3);
-        \draw (-1,5.3) -- (7,5.3);
+        \draw (-1,0.7) -- (7,0.7);
+        \draw (-1,0.7) -- (-1,5.55);
+        \draw (7,0.7) -- (7,5.55);
+        \draw (-1,5.55) -- (7,5.55);
         \draw (-1,8.7) -- (7,8.7);
         \draw (-1,8.7) -- (-1,13.2);
         \draw (-1,13.2) -- (7,13.2);
         \draw (7,13.2) -- (7,8.7);
         % Write text in the boxes
-        \node[align=left] at (0.8,0.8) 
+        \node[align=left] at (0.8,1.1) 
             {\tiny Result of parsing is a state \\[-3mm]
              \tiny of matrices (SomeTri) that \\[-3mm]
              \tiny contain what will be the AST};
@@ -887,17 +885,16 @@ checking if there exists a rule on the form $A ::= BC$ in the grammar.
     
     \end{tikzpicture}
 \caption{\label{treemeasure}Graphical representation of lexing and parsing using
-trees, with the measured parts enclosed in rectangles. Note that this is still a
+trees, with the measured parts enclosed in rectangles. This is still a
 simplification, all calls to \texttt{mappend} are not neccessary in order to
 move forward in the process, and it is indeed possible to get an AST from just
 one character by just measuring at one leaf, as shown in figure
 \ref{pipelinedia}. It is also worth mentioning that the measure step in the
 lexer creates an output state for every \textit{possible} input state, leading
-to high memory consumption.}
+to high memory consumption. Also remember that measures are cached at each node
+in the finger trees, so changing one char will not cause a complete
+recomputation.}
 \end{figure}
-% TODO: Clarify the table of lexing results for every possible input state.
-% TODO: Use tikz to create this figure instead.
-% TODO: Re-iterate the importance of caching here.
 
 \subsection{Dependently typed programming with charts}
 When merging the matrices, combining elements to create new, larger matrices, it
@@ -1214,14 +1211,19 @@ works. By pattern matching on the \texttt{Shape} in our \texttt{SomeTri} we can
 get a data structure where the relation between a larger and smaller matrix can
 be expressed. This data structure is \texttt{ChopFirst}. Once we obtain such a
 value, we can pattern match on it to control our recursion for chopping, and
-thus being able to give some guarantees about both the chopped matrix, and the
-row that was chopped. This can be seen in figure \ref{chopfirst}.
-% TODO: Describe the _exact_ relation between the chopped matrix and the larger
-% one (difference is always 1)
-% TODO: Show implementation of chopShape
+thus being able to guarantee that the chopped matrix is exactly one row smaller,
+and that the chopped row has is of height 1. This can be seen in figure
+\ref{chopfirst}.
 
 \begin{figure}[H]
 \begin{code}
+chopShape :: Shape' x 
+          -> (forall x'. ChopFirst x x' -> Shape' x' -> k) -> k
+chopShape Leaf' k = error "chopShape: can't chop!"
+chopShape (Bin' _ Leaf' y) k = k Stop y
+chopShape (Bin' _ y1 y2) k = 
+    chopShape y1 $ \q y1' -> k (Continue q) $ bin' y1' y2
+
 -- intuitively, x = x' + 1
 data ChopFirst x x' where
   Stop :: ChopFirst (Bin Leaf x) x
@@ -1236,9 +1238,9 @@ chopFirst (Continue q) (Quad a b c d) =
        (b',f)  = chopFirstRow q b
   in (row e f,quad a' b' zero d)
 \end{code}
-\caption{\label{chopfirst} The \texttt{ChopFirst} type and corresponding
-function. Note that \texttt{chopFirst} discarde the first column of the matrix,
-as seen in the \texttt{Stop} case.}
+\caption{\label{chopfirst} The \texttt{chopShape} function, \texttt{ChopFirst}
+type and corresponding function. Note that \texttt{chopFirst} discardes the
+first column of the matrix, as seen in the \texttt{Stop} case.}
 \end{figure}
 
 Note that \texttt{chopFirst}, as seen in figure \ref{chopfirst} does not match
@@ -1246,10 +1248,10 @@ the \texttt{Col}, \texttt{Row} or \texttt{One} constructors. For the
 \texttt{One} case it is quite obvious because we cannot chop a 1x1 matrix. For
 the other two, this is due to the type of \texttt{chopFirst}, where the input is
 a square matrix: \texttt{Mat x x a}. Because both \texttt{Col} and \texttt{Row}
-cannot be square (unless they're 1x1, in which case the \texttt{One} construct
-should be used instead, which cannot be chopped anyway), there is no need to
-check for them, and actually writing those cases would trigger a type error when
-compiling.
+cannot be square (unless they have shape 1x1, in which case the \texttt{One}
+construct should be used instead, which cannot be chopped anyway), there is no
+need to check for them, and actually writing those cases would trigger a type
+error when compiling.
 
 Finally, before calling the function corresponding to the V function from
 Valiant's algorithm, we need to \textbf{1)} throw away all but one value from
@@ -1336,7 +1338,7 @@ the call is free from side effects and \textit{independent of its environment}.
 \cite{unsafeHackage}. None of those two requirements are fulfilled here, so 
 this calls for discussion. In general, one does not want a call to
 \texttt{unsafePerformIO} to be evaluated more than once -- but in this case this
-is a requirement for the code to behave as expected, and that's why it is indeed
+is a requirement for the code to behave as expected, and that is why it is indeed
 dependent on its environment. The only side effect in this snippet is the use of
 the global random number generator and that should not affect any other part of
 the program, and can thus be considered safe.
@@ -1358,6 +1360,14 @@ parser can also recognise that the input tokens does not follow the grammar of
 the language, but it cannot give any information about where the syntactic error
 was made. In the rest of this chapter, we support and discuss these results. 
 
+\section{Branching in the parser}
+A bug was discovered late in the project and has, due to time constraint, not
+been investigated. The bug consists of the parser giving too many parse 
+results, all being identical. The number of results is deterministic and depends
+solely on certain constructs in the input source code. It has not been possible
+to pinpoint the source of this bug, but the behaviour suggests an error in
+\texttt{merge}, or possibly ambiguities in a given grammar. \label{branchbug}
+
 \section{Possible text editor usage}
 One of the motivations for writing this thesis was the possible usage of the
 parsing algorithm in a text editor, where speed is of the essence, but where one
@@ -1370,16 +1380,24 @@ techniques to parallelize the algorithm.
 If this algorithm was to be used in an editor, care would need to be taken when
 handling any parse errors, and in order to use it at all, position information
 is absolutely essential. This is discussed more in section \ref{futurework}.
-% TODO: Absolute performance and buckets/bucketing
+However, for real use, the algorithm is currently performing poorly, mainly due
+to high memory consumption in the lexer, where, at each leaf, a table of each
+output state given every possible input state.  Currently, for files larger than
+about 1000 lines, the runtime system will run out of stack space.  Since there
+is no sharing between these tables, this is very inefficient. For example, the
+token ';' is typically used in the same way at many positions in the source
+code. If the tables for that token could be shared, it would save both time and
+memory. The same is partly true for the parser as well, since some combinations
+of tokens are more common, the parser could save memory if some sharing was done
+there as well.
 
 \section{Testing}
-% TODO: Grammar of the first sentence. Rewrite.
-Being able to generate lexer and parser using BNFC, only needing a LBNF grammar
-file, testing for different language was made easy. The main testing language
-was Javalette Light, a small subset of C, but still with the ability to create
-interesting parse trees. Later, both the Javalette language and C was used to
-test the parser. When testing with C a serious bug was discovered, this is
-discussed in \ref{branchbug}.
+To test this parser algorithm was made rather easy, since a parser conforming to
+the algorithm could be generated by from a LBNF grammar using BNFC. The main
+testing language was Javalette Light, a small subset of C, but still with the
+ability to create interesting parse trees. Later, both the Javalette language
+and C was used to test the parser. When testing with C a serious bug was
+discovered, this is discussed in \ref{branchbug}.
 
 Testing was not automated, but instead simple input files were used, where the
 source code was either correct or had some syntax error. This proved to be
@@ -1391,7 +1409,9 @@ a base for test cases.
 
 \section{Measurements}
 We have been using criterion \cite{criterion} as a benchmarking library to test
-the implementation. Benchmarking included both measuring of the merge step with
+the implementation. 
+
+Benchmarking included both measuring of the merge step with
 two previously parsed subtrees as well as measuring the time to parse input of
 increasing sizes. Measuring was done on a computer running an Intel i7 processor
 clocked at 3.40 GHz, with a sample size of 1000. 
@@ -1453,25 +1473,20 @@ During implementation, a few mistakes worth mentioning were made. These
 are discussed here. 
 
 \subsection{Too many parse results}
-% TODO: Define and describe the branching
 When the parser was finally working, there was an issue that, whenever a file
 was successfully parsed, the parser returned a number of results, from 4 to
 1024, all identical to each other. This led us to believe that there was
-branching done in places where no branching was motivated. It turned out to be
-due to a bug in \texttt{merge}, in the subroutine taking care of the row that
-was chopped (see \ref{chopsection}). Initially, \texttt{merge} was written so
-that the chopped off row was included as a part of the upper-right matrix as an
-argument to the V function. This led that row to be combined with itself,
-because that row had already been computed using the V function. The solution
-was to remove all but the first element, so that nothing would be recomputed.
+branching done in places where no branching was motivated. Branching in this
+sense means that there are more than one possible AST for given input. In a
+grammar without ambiguities, this should not be possible on the top-level.
 
-% TODO: Move to results
-Another bug, similar to the one described above, was discovered late in the
-project and has thus not been investigated as much. The results are the same --
-too many parse results, but they are always the same number, and depend on
-certain constructs in the input source code. Due to time constraint it has not
-been possible to pinpoint the source of this bug, but the behaviour suggests an
-error in \texttt{merge}. \label{branchbug}
+The problem turned out to be a bug in \texttt{merge}, in the subroutine taking
+care of the row that was chopped (see \ref{chopsection}). Initially,
+\texttt{merge} was written so that the chopped off row was included as a part of
+the upper-right matrix as an argument to the V function. This led that row to be
+combined with itself, because that row had already been computed using the V
+function. The solution was to remove all but the first element, so that nothing
+would be recomputed.
 
 \subsection{Loosen constraint on Matrix type}
 When writing \texttt{merge}, one attempt was made at loosening the constraints
@@ -1491,7 +1506,9 @@ width, respectively.
 \label{futurework}
 The result of this project is a parser that can parse correct input and does
 that well. There are two main features missing however; position information on
-tokens, and good error reporting.
+tokens, and good error reporting. Furthermore, the bug described in
+\ref{branchbug} needs to be fixed before the library can be used in a real-world
+application.
 
 \subsection{Position information}
 Position information for tokens is a feature that is currently missing in the
@@ -1510,8 +1527,9 @@ Related to the issue of position information, the error reporting in the lexer
 and parser is poor to say the least. Invalid tokens are reported by the lexer,
 but invalid syntax is only reported by saying that there were more than one, or
 zero, parse results. For the lexer, the only thing missing in error reporting is
-said position information. This is, of course, true for the parser as well, but
-due to the structure of the parser it is harder to know where an error was made.
+said position information. This is, as a consequence, true for the parser as
+well, but due to the structure of the parser it is harder to know where an error
+was made.
 
 The reason for why it is hard to know where an error was made owes to the matrix
 structure and how rules are combined as $A ::= BC$. Using the CYK algorithm, it
@@ -1561,6 +1579,9 @@ small results that lack structural \textit{glue}, as shown in figure
     k.}
   \end{subfigure}
 \end{figure}
+
+\section{Conclusions}
+% TODO: Write something here
 
 %
 % BIBLIOGRAPHY
