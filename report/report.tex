@@ -2,6 +2,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage{datetime}
 
+% Header coolness
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[L]{\textsc{\nouppercase {\leftmark} }}
+\fancyhead[R]{\textsc{\nouppercase {\rightmark} }}
+
 % We want subsubsections to be numbered
 \setcounter{secnumdepth}{3}
 
@@ -99,6 +105,7 @@ thesis would not have been possible without you.
 
 \setcounter{page}{0}
 \tableofcontents
+\thispagestyle{empty}
 
 %
 % NEW CHAPTER
@@ -297,10 +304,10 @@ compiler front-end.
 
 \section{Parsing}
 \label{parsingsection}
-The role of the parser is, given a list of tokens, to determine if those tokens
-can be written in that order for a specific language. More formally, and
-connecting to the language of a context-free grammar above, the parser is given
-a string $w$ and checks if 
+The technical role of the parser is, given a list of tokens, to determine if
+those tokens can be written in that order for a specific language. More
+formally, and connecting to the language of a context-free grammar above, the
+parser is given a string $w$ and checks if 
 \[
 w \in \Sigma^*, S \xRightarrow[G]{*} w
 \]
@@ -330,18 +337,22 @@ algorithm creates a square matrix $W$ of dimension $|S_t|+1$.  It then computes
 the rest of its entries using dynamic programming and the definitions below.
 
 \begin{align}
-W_{i,i+1} &= \{ A | A ::= S_t[i] \in P \} \\
-W_{ij}    &= \bigcup_{k=i+1}^{j} W_{ik} \cdot W_{kj} \\
+W_{i,j}   &= \begin{cases}
+            \emptyset & \mbox{if }j \leq i \\
+            \{ A | A ::= S_t[i] \in P \} & \mbox{if }j=i+1 \\
+            \displaystyle\bigcup_{k=i+1}^{j} W_{ik} \cdot W_{kj} & \mbox{otherwise}
+            \end{cases} \\
 x \cdot y &= \{ A | A_0 \in x, A_1 \in y, A ::= A_0A_1 \in P \} \label{abc}
 \end{align}
 
-As we can see, just above the diagonal of $W$, we place all variables that can
-match that substring of the input as a terminal. Anything below the diagonal is
-zero, and anything that is not just above the diagonal is computed by checking
-if there are any rules on the form $A ::= BC$ as seen in equation \ref{abc}. A
-graphical representation of these rules in action is shown in figure
-\ref{exchart}. The input string is placed on the diagonal, and matching against
-the grammar rules are then applied recursively using dynamic programming. 
+As we can see, just above the diagonal of $W$, we place the set of all variables
+that can match that substring of the input as a terminal. Anything below the
+diagonal is zero, and anything that is not just above the diagonal is computed
+by checking if there are any rules on the form $A ::= BC$ as seen in equation
+\ref{abc}. A graphical representation of these rules in action is shown in
+figure \ref{exchart}. The input string is placed just above the diagonal, and
+matching against the grammar rules are then applied recursively using dynamic
+programming. 
 
 \begin{figure}[H]
   \centering
@@ -433,11 +444,13 @@ head (V a _) = a
 This looks good, but it has the inherent problem that any code that tries to
 access the head of an empty \texttt{Vec} will compile but result in a runtime error. 
 
-In dependently typed programming, types may contain other types, acting as
-values. It can be viewed as a hierarchy with values on the bottom, types in the
-middle and dependent types on top. While standard Haskell is not a dependently
-typed programming language, there are ways to use dependent types even in
-Haskell. For our vector example that would look something like this:
+In dependently typed programming, types may contain not only other types (i.e.
+when using polymorphism), but also values. That way, a type can be
+\textit{dependent} on a value of some other type that is embedded in the first
+one. While standard Haskell is not a dependently typed programming language,
+there are ways to use dependent types even in Haskell, for example by enabling
+the DataKinds extension to GHC. For our vector example that would look something
+like this:
 
 \begin{figure}[H]
 \begin{code}
@@ -1133,7 +1146,7 @@ element can fill the small void in the merged matrix, as illustrated in figure
         \draw[dotted] (4,5) -- (8,5);
         \draw[dotted] (4,6) -- (8,6);
         \draw[dotted] (4,7) -- (8,7);
-        \node[circle, draw, align=center, inChart] at (5,5) {\hspace{5mm}};
+        \node[circle, draw, align=center, inChart] at (5,5) {\phantom{P}};
         \node[rectangle, draw, fill=white] at (4,6) [right=1mm] {\small $V(Left, ?, Right)$};
         \draw [thick, ->] (6.9,5.7) to (5,5);
         % Information outside matrices
@@ -1155,7 +1168,7 @@ and recompute all but the leftmost elements when applying V.
 \begin{figure}
 \centering
     \begin{tikzpicture}
-        \pgftransformscale{0.8};
+        \pgftransformscale{0.6};
         % Outer shell
         \draw[very thick] (0,0) -- (0,7);
         \draw[very thick] (0,0) -- (7,0);
@@ -1170,16 +1183,16 @@ and recompute all but the leftmost elements when applying V.
         \draw (1,3) -- (1,7);
         \draw (2,3) -- (2,7);
         \draw (3,3) -- (3,7);
-        \node[inChart] at (2,7) {\Large$X$};
-        \node[inChart] at (3,6) {\Large$Y$};
-        \node[inChart] at (4,5) {\Large$Z$};
+        \node[inChart] at (2,7) {$X$};
+        \node[inChart] at (3,6) {$Y$};
+        \node[inChart] at (4,5) {$Z$};
         % Chopped right input matrix
         \draw (4,1) -- (7,1);
         \draw (4,2) -- (7,2);
         \draw (5,0) -- (5,3);
         \draw (6,0) -- (6,3);
-        \node[inChart] at (6,3) {\Large$B$};
-        \node[inChart] at (7,2) {\Large$C$};
+        \node[inChart] at (6,3) {$B$};
+        \node[inChart] at (7,2) {$C$};
         % Bottom left empty matrix
         \draw[dotted] (0,1) -- (4,1);
         \draw[dotted] (0,2) -- (4,2);
@@ -1194,9 +1207,9 @@ and recompute all but the leftmost elements when applying V.
         \draw[dotted, very thick] (4,4) -- (7,4); % Chopped row
         \draw[dotted] (4,5) -- (7,5);
         \draw[dotted] (4,6) -- (7,6);
-        \node[circle, draw, align=center, inChart] at (5,4) {\Large $A$};
+        \node[circle, draw, align=center, inChart] at (5,4) {$A$};
         \node[rectangle, draw, fill=white] at (4,5) [right=1mm] {\small $V(Left, A, Right')$};
-        \draw [thick, ->] (5,4) to (6.2,4.8);
+        \draw [thick, ->] (5,4) to (6.9,4.7);
         \node at (0,5) [rotate=90, above=0mm] {Left};
         \node at (7,1.5) [rotate=-90, above=0mm] {Right'};
 
@@ -1380,12 +1393,12 @@ techniques to parallelize the algorithm.
 If this algorithm was to be used in an editor, care would need to be taken when
 handling any parse errors, and in order to use it at all, position information
 is absolutely essential. This is discussed more in section \ref{futurework}.
-However, for real use, the algorithm is currently performing poorly, mainly due
-to high memory consumption in the lexer, where, at each leaf, a table of each
-output state given every possible input state.  Currently, for files larger than
-about 1000 lines, the runtime system will run out of stack space.  Since there
-is no sharing between these tables, this is very inefficient. For example, the
-token ';' is typically used in the same way at many positions in the source
+However, for real use, the algorithm is currently performing poorly, probably
+due to high memory consumption in the lexer, where, at each leaf, a table of
+each output state given every possible input state.  Currently, for files larger
+than about 1000 lines, the runtime system will run out of stack space.  Since
+there is no sharing between these tables, this is very inefficient. For example,
+the token ';' is typically used in the same way at many positions in the source
 code. If the tables for that token could be shared, it would save both time and
 memory. The same is partly true for the parser as well, since some combinations
 of tokens are more common, the parser could save memory if some sharing was done
@@ -1415,8 +1428,11 @@ Benchmarking included both measuring of the merge step with
 two previously parsed subtrees as well as measuring the time to parse input of
 increasing sizes. Measuring was done on a computer running an Intel i7 processor
 clocked at 3.40 GHz, with a sample size of 1000. 
-% TODO: Describe the measurements in more detail, both how they were run and
-% some analysis of the results.
+
+The benchmarks were carried out in such a way that lexing was done prior to
+measurement of parser measurement, so that lexer performance would not affect
+measurement of parser performance. The complete bechmark code can be found in
+the repository under \texttt{src/Test/Javalette/BenchParser.hs} \cite{jyp-bnfc}.
 
 It should be noted that testing large inputs for this project has been hard due
 to large memory consumption, possibly owing to the structure of the lexer.
@@ -1430,43 +1446,44 @@ the behaviour of the lexer, because it is not the main scope of this project, bu
 instead look a bit about how the parser should behave when it comes to time
 complexity. The steps taken to parse the input is to first create the initial
 matrix at each leaf. The time at each leaf is independent on the input size, and
-is therefore $O(1)$, but it is done at each leaf, se the total is $O(n)$. The
+is therefore $O(1)$, but it is done at each leaf, so the total is $O(n)$. The
 second step is the merging, which at each point also does the matrix
 multiplications --- shown by \citet{parparsepaper} to be $O(log^3 n)$.
 Implementation of the merging step was relatively straight-forward, and should
 therefore satisfy these conditions. 
 
 \subsection{Merging matrices}
-% TODO: Rewrite. V function has to be applied each time - so size matters. 
 The core of the parser is the merging of matrices corresponding to previously
-parsed subtrees. This should be fast, and not depend on the input size at all.
-It turns out that it is indeed independent of input size, and the merge function
-is almost constant in time with respect to the size of the subtrees.
+parsed subtrees. The merge process utilises the $V$ function and does matrix 
+multiplication, so it should depend heavily on the input size. Tests designed to
+measure this behaviour were inconclusive due to technical limitations in memory,
+but for the small files we were able to test, the behaviour was similar to that
+of the total running time. Such a behaviour can be expected, because all parsing
+work is done in \texttt{merge}, and the number of calls to \texttt{merge} is
+linear in the input size. 
 
 \subsection{Total running time}
 From stress testing the parser with large inputs, it seems that the parser
 behaves as expected relative to the input size, growing in a linear fashion with
-it, corresponding well to the expected behaviour.
-
-\begin{figure}[H]
-% TODO: Redo this graphic with error bars etc
-\includegraphics[width=\textwidth]{criterion-merge.eps}
-\caption{\label{critmerge}Merge times for files where the input size denote the
-number of functions (of equal size) in that file.}
-\end{figure}
+it. This should be expected, since $O(n)$ dwarfs $O(log^3 n)$ for inputs just
+below of 1000 and upwards.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{criterion-1-128.eps}
-\caption{\label{criterion}Running time for files where the input size denote the
-number of functions (of equal size) in that file. Note that a logarithmic scale
-is used on both axes.}
+\caption{\label{criterion}Mean running time for files where the input size denote the
+number of functions (of equal size) in that file. The green regression line
+shows that the parser more or less behaves linearly with respect to input size.}
 \end{figure}
 
 %
 % NEW CHAPTER
 %
 \chapter{Discussion}
-% TODO: Write introduction here
+In this chapter, we will look at some things that are not strictly part of the
+result, but related to it in some way. First, we will discuss some mistakes and
+how they were remedied, later we will look at some possible future work with the
+parser and lexer, and we will end with some conclusions of the project as a
+whole.
 
 \section{Pitfalls}
 During implementation, a few mistakes worth mentioning were made. These
@@ -1581,7 +1598,18 @@ small results that lack structural \textit{glue}, as shown in figure
 \end{figure}
 
 \section{Conclusions}
-% TODO: Write something here
+In this thesis, we have seen an implementation of an incremental version of the
+CYK algorithm, using optimisations devised by both \citeauthor{Valiant75} and
+\citeauthor{parparsepaper}. Given a grammar file, both the parser and a matching
+lexer can be generated. The parser uses a tree structure, which, together with
+the CYK algorithm, would make it suitable for an implementation utilising
+parallelism.
+
+However, there is a serious bug in the code, making the parser return several
+identical parse trees. The parser, and the lexer, is also lacking both position
+information and usable error reporting. Before the library can be used, these
+two issues will definately have to be dealt with. 
+% TODO: Complete this. 
 
 %
 % BIBLIOGRAPHY
