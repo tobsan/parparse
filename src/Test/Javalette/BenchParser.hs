@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Main where
 
 import System.Environment ( getArgs )
@@ -6,21 +7,19 @@ import Control.DeepSeq
 import Control.Monad
 import Criterion.Main
 import Criterion.Config
-import Data.FingerTree (measure)
+import Data.FingerTree (FingerTree, Measured, singleton, measure, viewr, (><), ViewR((:>)))
 import qualified Measuring as M
 import qualified Data.Matrix.Quad as Q
 import qualified LexJavalette as L
+import Data.Sequence (empty)
 import AbsJavalette
 import CnfTablesJavalette
 
-instance NFData CATEGORY where
-
-test :: String -> Maybe Prog
-test = M.parse . M.lex . L.makeTree
-
-testFiles = ["Enormous1.jl","Enormous2.jl","Enormous4.jl", 
-             "Enormous8.jl", "Enormous16.jl","Enormous32.jl",
-             "Enormous64.jl", "Enormous128.jl"]
+testFiles = ["Enormous1.jl", "Enormous8.jl", "Enormous16.jl","Enormous24.jl",
+             "Enormous32.jl","Enormous40.jl","Enormous48.jl", "Enormous56.jl",
+             "Enormous64.jl","Enormous72.jl", "Enormous80.jl","Enormous88.jl",
+             "Enormous96.jl", "Enormous104.jl","Enormous112.jl","Enormous120.jl", 
+             "Enormous128.jl"]
 
 myConfig = defaultConfig {
     cfgSamples = Last $ Just 1000,
@@ -28,22 +27,19 @@ myConfig = defaultConfig {
     cfgSummaryFile = Last $ Just $ "summary.csv"
 }
 
+dummy :: Measured v L.IntToken => FingerTree v L.IntToken
+dummy = singleton $ L.Token empty L.AlexAccNone
+
 runTest :: [FilePath] -> IO ()
 runTest fs = do
     ss <- mapM readFile fs
-    let tokens = map (\s -> M.lex (L.makeTree s)) ss
-        work ts = map fst $ Q.root $ measure ts
-        parses ts = map measure ts
+    mapM_ (print . length) ss
+    let tokens = map (L.stateToTree . measure . L.makeTree) ss
+        work [ts,tok] = case viewr (ts >< tok) of
+            (tree :> _) -> show $ map fst $ Q.root $ measure tree
     defaultMainWith myConfig (return ()) $
-        zipWith (\f ts -> bench f $ nf work ts) fs tokens
+        zipWith (\f ts -> bench f $ nf work [ts,dummy]) fs tokens
 
--- TODO: Design this better
 main :: IO ()
 main = runTest testFiles
 
-{-
-main :: IO ()
-main = do
-    fs <- mapM readFile testFiles
-    defaultMainWith myConfig (return ()) $ map (\(f,d) -> bench f $ nf test d) $ zip testLarger fs
--}
