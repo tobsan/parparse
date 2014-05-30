@@ -1,6 +1,17 @@
 Log of progress, meetings, but also random thoughts.
 ====================================================
 
+2014-05-25
+==========
+* It would be interesting to write a small compability layer between the
+  standard lexer/parser and the ones developed in this project.
+* Also; it would be useful to generate a sample main file from BNFC to suggest
+  usage of the parser.
+
+2014-05-15
+==========
+* Why is the homomorphism stuff so important? It seems so obvious.
+
 2014-05-05, before supervision
 ==============================
 * Bug somewhere leads to more than one result. Not related to oracle though.
