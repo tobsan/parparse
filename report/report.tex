@@ -5,8 +5,11 @@
 % Header coolness
 \usepackage{fancyhdr}
 \pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{%
+    \markboth{\thechapter.\ #1}{}
+}
 \fancyhead[L]{\textsc{\nouppercase {\leftmark} }}
-\fancyhead[R]{\textsc{\nouppercase {\rightmark} }}
+\fancyhead[R]{\textsc{\nouppercase {\rightmark} }} 
 
 % We want subsubsections to be numbered
 \setcounter{secnumdepth}{3}
@@ -522,7 +525,7 @@ we will look more deeply into them here.
 
 A \textit{monoid} is a mathematical object with an identity element and an
 associative operation. In Haskell, monoids are provided by writing instances of
-this type class:
+this type class (available in \texttt{Data.Monoid}):
 \begin{figure}[H]
 \begin{code}
 class Monoid a where
@@ -552,7 +555,7 @@ In this case, to measure means to have a function that, given an element of the
 type the \texttt{FingerTree} contains, yields a value of some type -- the
 measure of that element. Furthermore, any type that the elements can be measured
 to has to be a monoid. The existance of a measured instance is ensured by the
-\texttt{FingerTree} API. 
+\texttt{FingerTree} API in \texttt{Data.FingerTree}.
 
 \begin{figure}[H]
 \begin{code}
