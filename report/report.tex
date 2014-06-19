@@ -8,11 +8,13 @@
 \renewcommand{\chaptermark}[1]{%
     \markboth{\thechapter.\ #1}{}
 }
+\setlength{\headheight}{15pt}
 \fancyhead[L]{\textsc{\nouppercase {\leftmark} }}
 \fancyhead[R]{\textsc{\nouppercase {\rightmark} }} 
 
-% We want subsubsections to be numbered
+% We want subsubsections to be numbered, and included in the ToC
 \setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{4}
 
 % Graphics
 \usepackage[pdftex]{graphicx}
@@ -94,7 +96,7 @@
 \begin{abstract}
 \thispagestyle{plain}
 \setcounter{page}{3} % Ugly hack
-Using recent improvements to Valiant's algorithm for parsing context-free
+\noindent Using recent improvements to Valiant's algorithm for parsing context-free
 languages, we present an implementation of a generator of parsers that works
 incrementally, that can be parallelized and generated from a grammar
 specification. Using a tree structure makes for both easy use of incrementality
@@ -120,19 +122,18 @@ thesis would not have been possible without you.
 %
 
 \chapter{Background}
-The topic of this thesis is about \textbf{parsing} in an \textbf{incremental}
-fashion that can easily be \textbf{parallelizable}, using a
-\textbf{divide-and-conquer approach}. First, we will look at the involved
-topics, and later in this chapter, the concept of dependently typed programming
-will be discussed, because it is a technique used in the implementation of the
-parser.
+This thesis is about \textbf{parsing} in an \textbf{incremental} fashion that
+can easily be \textbf{parallelized}, using a \textbf{divide-and-conquer
+approach}. First, we look at the involved topics, and later in this chapter, the
+concept of dependently typed programming is discussed, because it is a technique
+used in the implementation of the parser.
 
 \section{Topics involved}
 In this section, we give a brief explanation of the topics involved in the
 implementation of this parser algorithm, and end with a motivation for why this
 is interesting in the first place. 
 
-\subsection{Divide-and-conquer}
+\paragraph{Divide-and-conquer} 
 One important class of algorithms in computer science are divide-and-conquer 
 algorithms. The name refers to the technique of breaking down a problem into
 sub-problems, where the same rule is applied recursively (the divide step). Each
@@ -147,12 +148,13 @@ algorithm.
 
 Trees are a class of data structures that are especially suited for 
 divide-and-conquer algorithms, because of their structure as trees with
-subtrees, naturally following the divide-step. To conquer is just to reduce the
-tree. It was shown by \citet{parparsepaper} that for trees of symbols in a
-finite alphabet, such a reduction can be made in a way that is associative, thus
-preserving the structure of the input. 
+subtrees, naturally following the divide-step. To conquer is just to reduce, or
+in functional programming terms: fold, the tree. It was shown by
+\citet{parparsepaper} that for trees of symbols in a finite alphabet, such a
+reduction can be made in a way that is associative, thus preserving the
+structure of the input. 
 
-\subsection{Incrementality}
+\paragraph{Incrementality}
 In an interactive system, such as a text editor, one typically want to do as
 little work as possible when some input in the system is changed. For the text
 editor case, we do not want to recompute all syntax highlighting information when
@@ -161,24 +163,26 @@ just one word is changed. Techniques capturing this behaviour are said to work
 \cite{incrementalpaper}. In a setting with lazy evaluation, it can be
 especially interesting to use, as shown by \cite{lazyfunctional}.
 
-\subsection{Parallelism}
-With computer architectures being parallel these days, with the ability to run
-many threads simultaneously, writing code that can be parallelized is crucial to
-make use of these features, and thus having code that run physically in
-parallel. Because divide-and-conquer algorithms usually work on several
-independent sub-problems, they are well-suited for parallelization. For this to
-become a reality, however, both the compiler and the source code must be written
-in a special way to permit parallelization.
+\paragraph{Parallelism}
+With computer architectures being parallel these days, the ability to run many
+threads simultaneously has become reality. Writing code that can be parallelized
+is crucial to make use of these features, and thus having code that run
+physically in parallel. Because divide-and-conquer algorithms usually work on
+several independent sub-problems, they are well-suited for parallelization. For
+this to become a reality, however, both the compiler and the source code must be
+written in a special way to permit parallelization. While our work is not
+explicitly written to run in parallel, the algorithm can be easily parallelized,
+as goes for the main third party library used. 
 
-\subsection{Parsing}
+\paragraph{Parsing}
 To parse is to check if some given input corresponds to a certain language's
-grammar, and in this thesis we will use \textbf{context-free grammars} for
-programming languages. Many programming errors are syntactical ones, such as
-misspelled keywords, missing parenthesis or semicolons and so on. All such
-errors are caught in parsing. Parsing will be described in more detail in
-section \ref{parsingsection}.
+grammar, and if so, return a parse tree of that input. In this thesis we will
+use \textbf{context-free grammars} to describe programming languages. Many
+programming errors are syntactical ones, such as misspelled keywords, missing
+parenthesis or semicolons and so on. All such errors are caught in parsing.
+Parsing will be described in more detail in section \ref{parsingsection}.
 
-\subsection{Motivation}
+\paragraph{Motivation}
 In compilers, lexing and parsing are the two first phases. The output of these
 is an abstract syntax tree (AST) which is fed to the next phase of the compiler.
 An AST could also provide useful feedback for programmers, already in their
@@ -187,9 +191,9 @@ parser that is incremental and that can also be parallelized, real-time feedback
 in the form of an AST could easily be provided to the programmer. Most current
 text editors give syntax feedback based on regular expressions, which does not
 yield any information about, for example, nesting or the surrounding AST. A
-fast incremental parser, can also be connected it to a type checker to get even
+fast incremental parser, can also be connected to a type checker to get even
 more information, possibly in real-time, while not having to recompile the whole
-file to get such information.
+file to get such information, but that is beyond the scope of this thesis.
 
 \section{Lexing}
 In compilers, a \textit{lexer} reads input source code and groups the characters
@@ -214,7 +218,7 @@ while(i < 5) {
     i++;
 }
 \end{code}
-\caption{A while loop that would be valid in C}
+\caption{\small A while loop that would be syntactically valid in C}
 \label{lexsample}
 \end{figure}
 
@@ -222,8 +226,8 @@ while(i < 5) {
 A generator for incremental divide-and-conquer lexers was developed by
 \citet{divconqlex} as a master's thesis. The aim of the present thesis is to
 write an incremental divide-and-conquer parser, so their work is well-suited as
-a starting point, and as something to build on. Their lexer utilise Alex
-\cite{alex} for core lexing routines and rely heavily on the use of arrays and
+a starting point, and as something to build on. Their lexer uses Alex
+\cite{alex} for core lexing routines and relies heavily on the use of arrays and
 finger trees, which we will see more of later. It is important to be able to use
 an incremental lexer when building an incremental parser, since we would
 otherwise have to lex the whole character stream before even getting to the
@@ -244,7 +248,7 @@ symbol, where $S \in V$.
 The language recognised by a context-free grammar $G$ is denoted $L(G)$ and is
 defined as 
 \begin{align*}
-\alpha A \beta & \xRightarrow\ \alpha \gamma \beta \text{ iff. (A ::= }\gamma \in P) \\
+\alpha A \beta & \xRightarrow[G]\ \alpha \gamma \beta \text{ iff. (A ::= }\gamma \in P) \\
 L(G) &= \{w \in \Sigma^* \ |\  S \xRightarrow[G]{*} w\}
 \end{align*}
 That is, all words in the language that can be derived by recursively applying
@@ -254,26 +258,28 @@ language $L$ is said to be context-free if there is a context-free grammar $G$
 that recognises the language, meaning that $L = L(G)$.
 
 We can exemplify by using a simple made-up language of if-then-else clauses.
-The language terminals are \textit{if, then, else, true and false}.
-There are two variables, \textit{I} (for if) and \textit{R} (for recursive)
-described by a total of four productions. The starting symbol is \textit{I} --- so
-just \textit{true} would not be a string of this language. The formal
-definition of such a language can be seen in figure \ref{iflang}. Note that
-while P is not explicitly defined, each of the rules for I and R constitute P.
-Each production (partially) defines a variable and contains terminals and/or
-symbols on its right-hand side \cite[p.171]{automatabook}.
+The language terminals are \textit{if, then, else, true and false}.  There are
+two variables, \textit{I} (for if) and \textit{R} (for recursive) described by a
+total of four productions. The starting symbol is \textit{I} --- so just
+\textit{true} would not be a string of this language. The formal definition of
+this language can be seen in figure \ref{iflang}. Note that \textit{P} is
+defined by the rules for \textit{I} and \textit{R}, and each production
+(partially) defines a variable and contains terminals or symbols on its
+right-hand side \cite[p.171]{automatabook}.
 
 \begin{figure}[H]
 \begin{align*}
 G &= (V, \Sigma , P, I) \\
 V &= \{I,R\} \\
 \Sigma &= \{true,false,if,then,else\} \\
-I &\rightarrow if\ R\ then\ R\ else\ R \\
-R &\rightarrow I \\
-R &\rightarrow true \\
-R &\rightarrow false
+P &= \{& \\
+& I \rightarrow if\ R\ then\ R\ else\ R \\
+& R \rightarrow I \\
+& R \rightarrow true \\
+& R \rightarrow false \\
+\}
 \end{align*}
-\caption{Context-free grammar for a recursive if-then-else language}
+\caption{\small Context-free grammar for a recursive if-then-else language}
 \label{iflang}
 \end{figure}
 
@@ -287,7 +293,7 @@ the following forms:
     A & $\rightarrow$ & BC, & A is a variable, B and C are variables \\
     A & $\rightarrow$ & a, & A is a variable, a is a terminal symbol \\
 \end{tabular}
-\caption{Rules allowed in Chomsky Normal Form}
+\caption{\small Rules allowed in Chomsky Normal Form}
 \end{figure}
 Because grammars in CNF are restricted to branches or single terminal symbols,
 they are well suited for usage in divide-and-conquer algorithms. There are
@@ -296,8 +302,14 @@ does not have to write grammars in CNF in the first place \cite{langeleiss}.
 
 \subsection{Backus-Naur Form}
 Context-free grammars are often used to describe the syntax of programming
-languages. Such descriptions are often given in a labelled \textbf{Backus-Naur
+languages. Such descriptions are often given in \textbf{Backus-Naur
 form} \cite{backusform}, where each rule is written on the following form:
+\[
+Variable ::= Production 
+\]
+However, for practical programming purposes, one usually uses a
+\textit{labelled} version of BNF, where the rules are extended to be on this
+form:
 \[
 Label.\ Variable ::= Production 
 \]
@@ -306,22 +318,23 @@ This labelled Backus-Naur form is what we will be using in this thesis, and is
 the format also used in the \textbf{BNF Converter (BNFC)} \cite{bnfc}, a lexer
 and parser generator tool developed at Chalmers.  Given such a grammar, BNFC
 generates, among other things, a lexer and a parser, implemented in one of
-several languages, for the language described in that grammar. According to its
-documentation, usage of BNFC saves approx 90\% of source code work in writing a
-compiler front-end. 
+several programming languages, for the language described in that grammar.
+According to its documentation, usage of BNFC saves around 90\% of source code
+work in writing a compiler front-end. 
 
 \section{Parsing}
 \label{parsingsection}
 The technical role of the parser is, given a list of tokens, to determine if
-those tokens can be written in that order for a specific language. More
+those tokens can be written in that order for a specific language, and if so,
+return an abstract syntax tree corresponding to that list of tokens. More
 formally, and connecting to the language of a context-free grammar above, the
 parser is given a string $w$ and checks if 
 \[
 w \in \Sigma^*, S \xRightarrow[G]{*} w
 \]
-that is, to check if the given string can be generated by applying the grammar
-rules recursively. There are many different algorithms to do this, most common
-are LL(k) and LR(k) parsers that are bottom-up and top-down parsers,
+that is, to check if, and how, the given string can be generated by applying the
+grammar rules recursively. There are many different algorithms to do this, most
+common are LL(k) and LR(k) parsers that are bottom-up and top-down parsers,
 respectively \cite[p.192]{dragonbook}. This project will use an improved version
 of the CYK algorithm, a bottom-up parser.
 
@@ -347,10 +360,10 @@ the rest of its entries using dynamic programming and the definitions below.
 \begin{align}
 W_{i,j}   &= \begin{cases}
             \emptyset & \mbox{if }j \leq i \\
-            \{ A | A ::= S_t[i] \in P \} & \mbox{if }j=i+1 \\
+            \{ A | (A ::= S_t[i]) \in P \} & \mbox{if }j=i+1 \\
             \displaystyle\bigcup_{k=i+1}^{j} W_{ik} \cdot W_{kj} & \mbox{otherwise}
             \end{cases} \\
-x \cdot y &= \{ A | A_0 \in x, A_1 \in y, A ::= A_0A_1 \in P \} \label{abc}
+x \cdot y &= \{ A | A_0 \in x, A_1 \in y, (A ::= A_0A_1) \in P \} \label{abc}
 \end{align}
 
 As we can see, just above the diagonal of $W$, we place the set of all variables
@@ -375,7 +388,7 @@ programming.
     \mrk 4 {$j$};
     \mrk 7 {$k$};
   \end{tikzpicture}
-  \caption{\label{exchart}Upper-triangular matrix for which the CYK algorithm
+  \caption{\label{exchart} \small Upper-triangular matrix for which the CYK algorithm
            has been applied. $X ::= S_t[i..j]$ and $Y ::= S_t[j..k]$ are
            terminal rules in the grammar this matrix is built from, and $Z
            ::= XY$ is a nonterminal one} 
@@ -385,7 +398,7 @@ programming.
 \citeauthor{Valiant75} improved the CYK algorithm by showing that
 context-free recognition can be reduced to matrix multiplication of boolean
 matrices \cite{Valiant75}. This was done by first reducing recognition to the
-transitive closure of upper-triangual matrices.  The closure of a matrix $W$,
+transitive closure of upper-triangular matrices.  The closure of a matrix $W$,
 denoted $W^+$, is defined as the matrix $C$ such as $C = C \cdot C + W$.
 Valiant then showed that closure could be reduced to matrix multiplication by
 employing a divide-and-conquer approach, and furthermore only having to consider
@@ -395,15 +408,16 @@ Most important for this project, the step to reduce closure to matrix
 multiplication described a recursive function that we will call $V$, such that
 given input matrices $A$ and $B$, and a partial matrix $X$ only used for strings
 that starts in $A$ and ends in $B$, it computes a matrix $Y$, where $Y = AY + YB
-+ X$ \cite{parparsepaper}. The function V is responsible for parsing $Z ::= XY$
-in figure \ref{exchart} above.
++ X$ \cite{parparsepaper}. The function $V$ is responsible for parsing $Z ::=
+XY$ in figure \ref{exchart} above.
 
 \subsection{Improvement by \citeauthor{parparsepaper}}
-\citet{parparsepaper} showed that for many inputs, most of the matrices
-in Valiant's algorithm would be empty. By optimizing the algorithm to handle
-empty matrices as a special case and avoiding multiplication of those empty
-matrices, they managed to lower the time complexity of the algorithm from that
-of matrix multiplication, which is $O(n^y), 2 \leq y \leq 3$ to $O(log^3 n)$. 
+\citet{parparsepaper} showed that for many inputs, most of the sets in the
+matrix in Valiant's algorithm would be empty. By optimizing the algorithm to
+handle empty matrices as a special case and avoiding multiplication of those
+empty matrices, they managed to lower the time complexity of the algorithm from
+that of matrix multiplication, which is $O(n^y), 2 \leq y \leq 3$ to $O(log^3
+n)$. 
 
 In the same article, another improvement that regarded sequential input, such as
 lists of statements in a while loop, was made. Such input can have rules as
@@ -412,7 +426,7 @@ Stms &::= \epsilon \\
 Stms &::= Stm\text{ }Stms
 \end{align*}
 
-which are by nature linear and does not fit well for parallelization. The
+which are by nature linear and do not fit well for parallelization. The
 solution is to introduce tagging of all non-terminals that indicated if they
 should be on the left (tagged 0) or right (tagged 1) side of the tree, and then
 adding a new rule for constructing the whole tree of the nonterminal: $Y ::=
@@ -425,8 +439,9 @@ more in section \ref{oraclesection}, or one could simply use an alternating
 stream of 0s and 1s, which is what the reference implementation uses. 
 
 \section{Dependently typed programming}
-In this project, implementation of the parsing algorithm uses dependent types
-Therefore, it is good to know what this means before diving further into it.
+In this project, the implementation of the parsing algorithm uses dependent
+types Therefore, it is good to know what this means before diving further into
+it.
 
 In a strictly typed programming language like Haskell, every value has a type
 that is enforced. Assigning an integer a floating-point value would not
@@ -446,13 +461,13 @@ head :: Vec a -> a
 head Nil = error "empty vector"
 head (V a _) = a
 \end{code}
-\caption{Vector type and head function}
+\caption{\small Vector type and head function}
 \end{figure}
 
 This looks good, but it has the inherent problem that any code that tries to
 access the head of an empty \texttt{Vec} will compile but result in a runtime error. 
 
-In dependently typed programming, types may contain not only other types (i.e.
+In dependently typed programming, types may contain not only other types (i.e.\
 when using polymorphism), but also values. That way, a type can be
 \textit{dependent} on a value of some other type that is embedded in the first
 one. While standard Haskell is not a dependently typed programming language,
@@ -471,7 +486,7 @@ head :: Vec a (S b) -> a
 head Nil = error "empty vector" -- this does not type-check
 head (V a _) = a
 \end{code}
-\caption{Dependently typed vector with head function. Note that the DataKinds
+\caption{\small Dependently typed vector with head function. Note that the DataKinds
 extension for GHC is needed for this to work.}
 \end{figure}
 
@@ -502,6 +517,13 @@ couple of libraries and programming techniques one has to be familiar with
 before moving forward. We will first describe those, and then move on to
 describe changes to the lexer we inherited from \citet{divconqlex}, and the
 implementation of the parser.
+
+The source code for this project can be found both in the \texttt{Quad.hs}
+module in a fork of BNFC \cite{jyp-bnfc}, but also in
+\path{source/src/BNFC/Backend/Haskell/} directory in the same repository, where
+the files \texttt{CFtoAlex3Incremental.hs} and \texttt{ToCYK.hs} are the most
+significant contributions. Before integration to BNFC, work was done in a
+separate repository \cite{tobsan-repo}.
 
 \section{Finger trees}
 A finger tree is a finite data structure with logarithmic access time and
@@ -534,7 +556,7 @@ class Monoid a where
     -- An associative operation
     mappend :: a -> a -> a
 \end{code}
-\caption{The Monoid type class}
+\caption{\small The Monoid type class}
 \end{figure}
 
 This means that anything that is a Monoid has an identity element (that can be
@@ -547,14 +569,14 @@ instance Monoid [a] where
     mempty = []
     mappend = (++)
 \end{code}
-\caption{Monoid instance for lists}
+\caption{\small Monoid instance for lists}
 \end{figure}
 
 The \texttt{FingerTree} type has a notion of \textit{measure} on its elements.
 In this case, to measure means to have a function that, given an element of the
 type the \texttt{FingerTree} contains, yields a value of some type -- the
 measure of that element. Furthermore, any type that the elements can be measured
-to has to be a monoid. The existance of a measured instance is ensured by the
+to has to be a monoid. The existence of a measured instance is ensured by the
 \texttt{FingerTree} API in \texttt{Data.FingerTree}.
 
 \begin{figure}[H]
@@ -569,8 +591,8 @@ data FingerTree v a
 -- Create an empty finger tree
 empty :: Measured v a => FingerTree v a
 \end{code}
-\caption{Measuring and the \texttt{FingerTree} type. The \texttt{Measured} class
-is constrained on both the existence of a monoid instance and the existance of a
+\caption{\small Measuring and the \texttt{FingerTree} type. The \texttt{Measured} class
+is constrained on both the existence of a monoid instance and the existence of a
 functional dependency between \texttt{a} and \texttt{v}, so that the type
 \texttt{v} can be uniquely determined from having only type \texttt{a}
 \cite{fundeps}.} 
@@ -595,7 +617,7 @@ instance Monoid Int where
     mempty = 0
     mappend = (+)
 \end{code}
-\caption{One possible measure from \texttt{String} to \texttt{Int}}
+\caption{\small One possible measure from \texttt{String} to \texttt{Int}}
 \end{figure}
 It should be noted, however, that because instances cannot be hidden, writing a
 general \texttt{Monoid} instance for integers over addition is perhaps not the
@@ -609,18 +631,15 @@ tree, but only for the nodes leading to the changed node, which are no more than
 $O(log\ n)$, i.e. the height of the tree. 
 
 \section{Lexing}
-For lexing code into tokens, the results from the LexGen project was used.
-However, some modifications had to be done to LexGen in order to be easily
-combined with an incremental parser. One large change was done to the lexing
-code, however, which is due to the fact that not only the lexer, but also the
-parser, should work incrementally. In the LexGen code, the output structure is a
+For lexing code into tokens, the results from the LexGen project was used. Some
+modifications had to be done to LexGen in order to be easily combined with an
+incremental parser. In the LexGen code, the output structure is a
 \texttt{Sequence} of tokens. Because \texttt{Sequence} is a less general
 implementation of finger trees, they cannot be measured, and is therefore not as
 suitable to use in an incremental setting, where we want to do several
-transformations at the nodes. Hence, instead of outputting tokens
-as a \texttt{Sequence}, the code was changed to output another
-\texttt{FingerTree}, from which the tokens could then be measured (see section
-\ref{pipeline} below).
+transformations at the nodes. Hence, instead of outputting tokens as a
+\texttt{Sequence}, the code was changed to output another \texttt{FingerTree},
+from which the tokens could then be measured (see section \ref{pipeline} below).
 
 \section{Parsing}
 There is an existing reference implementation in BNFC for the optimisation to
@@ -661,29 +680,29 @@ measure characters into an intermediate type for lexing. That intermediate
 \begin{code}
 instance (Measured v IntToken) => Measured IntToken Char where
 \end{code}
-\caption{\label{pipelinedia}Diagram of measuring pipeline. The type signature
+\caption{\label{pipelinedia} \small Diagram of measuring pipeline. The type signature
 for the measured instance in the lexer shows the constraint: to measure a
 \texttt{Char} into an \texttt{IntToken}, one has to be able to measure from
 \texttt{IntToken} to some type \texttt{v}, which is defined as \texttt{SomeTri},
 a type for upper-triangular matrices, in the parser.}
 \end{figure}
 
-We will describe what SomeTri is in more detail later, so for now it can be
-thought of as the internal parser state. Looking at simple testing
-code shows easily how the data progresses through the pipeline.
-\texttt{stateToTree} is an auxiliary function extracting a \texttt{FingerTree}
-from the internal lexer state.
+We will describe what \texttt{SomeTri} is in more detail in section
+\ref{depcharts}, so for now it can be thought of as the internal parser state.
+Looking at simple testing code shows easily how the data progresses through the
+pipeline.  \texttt{stateToTree} is an auxiliary function extracting a
+\texttt{FingerTree} from the internal lexer state.
 
 \begin{figure}[H]
 \begin{code}
-test :: FilePath -> IO ([(CATEGORY,Any)])
+test :: FilePath -> IO [(CATEGORY,Any)]
 test filename = do
     file <- readFile filename
     let lexed  = measure $ makeTree file
         parsed = measure $ stateToTree lexed
     return (results parsed)
 \end{code} 
-\caption{Code showing the measuring pipeline}
+\caption{\small Code showing the measuring pipeline}
 \end{figure}
 
 Note that figure \ref{pipelinedia} is restricted to a single character. This
@@ -714,12 +733,14 @@ instance Measured (SomeTri [(CATEGORY,Any)]) IntToken where
                 Just token -> One $ select b $ tokenToCats b token
 
 \end{code}
-\caption{\label{parsemeasure} Measure from token to upper-triangular matrix. The
-\texttt{T} construct guarantees a square matrix of a given size. The call to
-\texttt{quad} makes sure the observation about empty matrices by
+\caption{\label{parsemeasure} \small Measure from token to upper-triangular
+matrix. The \texttt{T} construct guarantees a square matrix of a given size. The
+call to \texttt{quad} makes sure the observation about empty matrices by
 \citet{parparsepaper} is handled properly when creating a matrix. The
 \texttt{intToToken} function is an auxiliary which is due to implementation
-details in the lexer.}
+details in the lexer. The operator \texttt{:/:} is a constructior for a type
+\texttt{Pair} used to capture the behaviour with oracle. The functions
+\texttt{leftOf} and \texttt{rightOf} are used to deconstruct a \texttt{Pair}.}
 \end{figure}
 
 We create a 2x2 matrix, and place the lexed token in the upper-right corner
@@ -747,7 +768,7 @@ constructors are shown in figure \ref{mat} later).
         \node at (2,4) [above = 1mm] {\textsc{Bin Leaf Leaf}};
         \node at (4,2) [rotate = -90, above = 1mm] {\textsc{Bin Leaf Leaf}};
     \end{tikzpicture}
-\caption{2x2 matrix with a token}
+\caption{\small 2x2 matrix with a token}
 \end{subfigure}
 \hfill
 \begin{subfigure}[H]{.45\textwidth}
@@ -762,11 +783,11 @@ constructors are shown in figure \ref{mat} later).
         \node at (2,4) [above = 1mm] {\textsc{Bin Leaf Leaf}};
         \node at (4,2) [rotate = -90, above = 1mm] {\textsc{Bin Leaf Leaf}};
     \end{tikzpicture}
-\caption{2x2 matrix without a token}
+\caption{\small 2x2 matrix without a token}
 \end{subfigure}
-\caption{\label{measurematrix} Graphical representation of the two possible
-cases for measuring to matrices in the parser. $\{Tok\}$ represents the set of all
-rules $A$ such that $A ::= tok$ where tok is the lexed token.}
+\caption{\label{measurematrix} \small Graphical representation of the two
+possible cases for measuring to matrices in the parser. $\{Tok\}$ represents the
+set of all rules $A$ such that $A ::= token$ where $token$ is the lexed token.}
 \end{figure}
 
 Finally, the actual parsing happens in the \texttt{Monoid} instance for
@@ -792,8 +813,8 @@ instance RingP [(CATEGORY,Any)] where
           trav (x:xs) = (++) <$> x <*> trav xs
           app tx ty (z,f)  = (z, f tx ty)
 \end{code}
-\caption{\label{parsemonoid}Monoid instance for SomeTri, and RingP instance for
-the parser data}
+\caption{\label{parsemonoid} \small Monoid instance for \texttt{SomeTri}, and
+\texttt{RingP} instance for the parser data}
 \end{figure}
 The call to combine in figure \ref{parsemonoid} is the programming version of
 checking if there exists a rule on the form $A ::= BC$ in the grammar.
@@ -897,7 +918,7 @@ checking if there exists a rule on the form $A ::= BC$ in the grammar.
         % Write text in the boxes
         \node[align=left] at (0.8,1.1) 
             {\tiny Result of parsing is a state \\[-3mm]
-             \tiny of matrices (SomeTri) that \\[-3mm]
+             \tiny of matrices (\texttt{SomeTri}) that \\[-3mm]
              \tiny contain what will be the AST};
         \node[align=left] at (0.6,9.1)
             {\tiny Result of lexing is a state \\[-3mm]
@@ -905,19 +926,17 @@ checking if there exists a rule on the form $A ::= BC$ in the grammar.
              \tiny of lexed tokens};
     
     \end{tikzpicture}
-\caption{\label{treemeasure}Graphical representation of lexing and parsing using
-trees, with the measured parts enclosed in rectangles. This is still a
-simplification, all calls to \texttt{mappend} are not neccessary in order to
-move forward in the process, and it is indeed possible to get an AST from just
-one character by just measuring at one leaf, as shown in figure
-\ref{pipelinedia}. It is also worth mentioning that the measure step in the
-lexer creates an output state for every \textit{possible} input state, leading
-to high memory consumption. Also remember that measures are cached at each node
-in the finger trees, so changing one char will not cause a complete
-recomputation.}
+\caption{\label{treemeasure} \small Graphical representation of lexing and
+parsing using trees, with the measured parts enclosed in rectangles. This is
+still a simplification, all calls to \texttt{mappend} are not neccessary in
+order to move forward in the process, and it is indeed possible to get an AST
+from just one character by just measuring at one leaf, as shown in figure
+\ref{pipelinedia}. Remember that measures are cached at each node in the finger
+trees, so changing one char will not cause a complete recomputation.}
 \end{figure}
 
 \subsection{Dependently typed programming with charts}
+\label{depcharts}
 When merging the matrices, combining elements to create new, larger matrices, it
 is important to keep the sizes of these matrices correct to avoid bugs that
 would be hard to catch otherwise. The way this is done in the library available
@@ -940,9 +959,14 @@ data Mat :: Shape -> Shape -> * -> * where
   One :: !a -> Mat Leaf Leaf a
   Row :: Mat x1 Leaf a -> Mat x2 Leaf a -> Mat (Bin x1 x2) Leaf a
   Col :: Mat Leaf y1 a -> Mat Leaf y2 a -> Mat Leaf (Bin y1 y2) a
+
+data SomeTri a where
+  T :: Shape' s -> Pair (Mat s s a) -> SomeTri a
 \end{code}
-\caption{\label{mat}The \texttt{Mat} type with its dependent \texttt{Shape}
-type. Note that shapes are used both for x- and y-axis size}
+\caption{\label{mat} \small The \texttt{Mat} type with its dependent \texttt{Shape}
+type. Note that shapes are used both for x- and y-axis size. Also note the
+\texttt{SomeTri} type that captures two square matrices, used for the oracle
+functionality, which is described more in section \ref{oraclesection}.}
 \end{figure}
 
 Here are some example matrices, just to get a feel for how they are constructed.
@@ -991,7 +1015,7 @@ grouped inside the matrices.
     \node at (0,0) [rotate = 90, above = 3mm, right = 0mm] 
         {\tiny \textsc{Bin (Bin Leaf Leaf) (Bin Leaf Leaf)}};
   \end{tikzpicture}
-\caption{\texttt{Quad q1 q2 q3 q4}, q1-q4 are \texttt{Quad a b c d}} 
+\caption{\small \texttt{Quad q1 q2 q3 q4}, q1-q4 are \texttt{Quad a b c d}} 
 \end{subfigure}
 \hfill
 \begin{subfigure}[t]{.3\textwidth}
@@ -1012,7 +1036,7 @@ grouped inside the matrices.
         \node at (0,2) [above = 3mm, right = 0mm] {\tiny \textsc{Bin (Bin Leaf Leaf) (Bin Leaf Leaf)}};
         \node at (0,0) [rotate = 90, above = 3mm, right = 0mm] {\tiny \textsc{Bin Leaf Leaf}};
     \end{tikzpicture}
-\caption{\texttt{Quad r1 r2 r3 r4}, r1-r4 are \texttt{Row a b}}
+\caption{\small \texttt{Quad r1 r2 r3 r4}, r1-r4 are \texttt{Row a b}}
 \end{subfigure}
 \hfill
 \begin{subfigure}[t]{.2\textwidth}
@@ -1032,9 +1056,9 @@ grouped inside the matrices.
         \textsc{Bin (Bin Leaf Leaf) Leaf}};
 
     \end{tikzpicture}
-\caption{\texttt{Col (Col a b) c)}}
+\caption{\small \texttt{Col (Col a b) c)}}
 \end{subfigure}
-\caption{Example matrices with their \texttt{Shape}s written out, and the
+\caption{\small Example matrices with their \texttt{Shape}s written out, and the
 \texttt{Mat} constructor used to create them}
 \end{figure}
 
@@ -1104,7 +1128,7 @@ element can fill the small void in the merged matrix, as illustrated in figure
         \node at (8,2) [rotate=-90, above=0mm] {Right};
     \end{tikzpicture}
 
-\caption{Merging with middle element, as done by \citet{parparsepaper}}
+\caption{\small Merging with middle element, as done by \citet{parparsepaper}}
 \end{subfigure}
 \hfill
 \begin{subfigure}[t]{.45\textwidth}
@@ -1161,17 +1185,18 @@ element can fill the small void in the merged matrix, as illustrated in figure
         \node at (0,6) [rotate=90, above=0mm] {Left};
         \node at (8,2) [rotate=-90, above=0mm] {Right};
     \end{tikzpicture}
-\caption{Merge without middle element -- the diagonal is broken!}
+\caption{\small Merge without middle element -- the diagonal is broken!}
 \end{subfigure}
-\caption{\label{mergein}Merging with and without a single element as glue.}
+\caption{\label{mergein} \small Merging with and without a single element as glue.}
 \end{figure}
 
 Because of the absence of an extra element, the existing function
 \texttt{mergein} could not be used, but a merge function had to be implemented.
 Without the extra element, the diagonal would be broken, and the algorithm would
 not be able to move forward. We thus want to imitate the behaviour of having a
-middle element.  The solution: chop off the first row in the second argument,
-and recompute all but the leftmost elements when applying V. 
+middle element. The solution: chop off the first row in the second argument,
+and recompute all but the leftmost elements when applying the V function from
+Valiant's algorithm. 
 
 \begin{figure}
 \centering
@@ -1222,19 +1247,33 @@ and recompute all but the leftmost elements when applying V.
         \node at (7,1.5) [rotate=-90, above=0mm] {Right'};
 
     \end{tikzpicture}
-\caption{\label{chopmerge}Successful merge without a middle element. The first
+\caption{\label{chopmerge} \small Successful merge without a middle element. The first
 row on the right matrix is chopped off, we discard elements D and E and put A in
 the leftmost bottom position, placing it just above the diagonal as wanted.}
 \end{figure}
 
+\subsubsection{Chopping matrices}
 Before looking at the actual merge code, we should look at how the chopping
 works. By pattern matching on the \texttt{Shape} in our \texttt{SomeTri} we can
 get a data structure where the relation between a larger and smaller matrix can
 be expressed. This data structure is \texttt{ChopFirst}. Once we obtain such a
 value, we can pattern match on it to control our recursion for chopping, and
 thus being able to guarantee that the chopped matrix is exactly one row smaller,
-and that the chopped row has is of height 1. This can be seen in figure
-\ref{chopfirst}.
+and that the chopped row has height 1. This can be seen in figure
+\ref{chopshape}. To make it clear, these are the steps:
+\begin{enumerate}
+    \item Call \texttt{chopShape} to obtain \texttt{ChopFirst} value (see figure
+          \ref{chopshape}).
+    \item Use \texttt{ChopFirst} value to chop off row and column in matrix,
+          returning chopped off row and smaller matrix (see figure
+          \ref{chopfirst}).
+    \item Discard all but the leftmost element in the chopped off row, and
+          extend the row to match the sizes of the input matrices, done by
+          \texttt{mkLast} (see figure \ref{mklast}).
+    \item Use chopped off row and smaller matrix to apply Valiant's V function,
+          called \texttt{closeDisjointP} here, facilitating the merge (see
+          figure \ref{merge}).
+\end{enumerate}
 
 \begin{figure}[H]
 \begin{code}
@@ -1249,6 +1288,18 @@ chopShape (Bin' _ y1 y2) k =
 data ChopFirst x x' where
   Stop :: ChopFirst (Bin Leaf x) x
   Continue :: ChopFirst x x' -> ChopFirst (Bin x x0) (Bin x' x0)
+\end{code}
+\caption{\label{chopshape} \small The \texttt{chopShape} function, returning a
+continuation with both an instance of \texttt{ChopFirst} together with a smaller
+(chopped) \texttt{Shape}.}
+\end{figure}
+
+The result of running \texttt{chopShape} is used when chopping off the first row
+and first column in a given matrix. The column is discarded, since it is always
+empty due to being below the diagonal, while the row is returned together with
+a smaller matrix. This is shown in figure \ref{chopfirst}.
+\begin{figure}[H]
+\begin{code}
 
 chopFirst :: ChopFirst x x' -> Mat x x a  
                             -> (Mat x' Leaf a, Mat x' x' a)
@@ -1259,9 +1310,8 @@ chopFirst (Continue q) (Quad a b c d) =
        (b',f)  = chopFirstRow q b
   in (row e f,quad a' b' zero d)
 \end{code}
-\caption{\label{chopfirst} The \texttt{chopShape} function, \texttt{ChopFirst}
-type and corresponding function. Note that \texttt{chopFirst} discardes the
-first column of the matrix, as seen in the \texttt{Stop} case.}
+\caption{\label{chopfirst} \small The \texttt{chopShape} function, \texttt{ChopFirst}
+type and corresponding function.}
 \end{figure}
 
 Note that \texttt{chopFirst}, as seen in figure \ref{chopfirst} does not match
@@ -1277,18 +1327,18 @@ error when compiling.
 Finally, before calling the function corresponding to the V function from
 Valiant's algorithm, we need to \textbf{1)} throw away all but one value from
 the chopped off row, and \textbf{2)} extend the row to match the size of the
-matrices we merge with. This is done by a function called \texttt{mkLast'},
+matrices we merge with. This is done by a function called \texttt{mkLast},
 shown in figure \ref{mklast}.
 
 \begin{figure}[H]
 \begin{code}
-mkLast' :: RingP a => Shape' y -> Mat x Leaf a -> Mat x y a
-mkLast' Leaf' m = m
-mkLast' (Bin' _ _ y) Zero = zero
-mkLast' (Bin' _ _ y) (One a) = col zero (mkLast' y (one a))
-mkLast' (Bin' _ _ y) (Row a b) = quad zero zero (mkLast' y a) zero
+mkLast :: RingP a => Shape' y -> Mat x Leaf a -> Mat x y a
+mkLast Leaf' m = m
+mkLast (Bin' _ _ y) Zero = zero
+mkLast (Bin' _ _ y) (One a) = col zero (mkLast y (one a))
+mkLast (Bin' _ _ y) (Row a b) = quad zero zero (mkLast y a) zero
 \end{code}
-\caption{\label{mklast}Implementation of the mkLast function}
+\caption{\label{mklast} \small Implementation of the mkLast function}
 \end{figure}
 
 We now have everything we need to create a new, larger, better matrix containing
@@ -1308,11 +1358,12 @@ merge p (T y l) (T x r) = chopShape x $ \chopper x' ->
                 (mkLast' y $ sequenceA (rTopL :/: rTopR)) rR'
     in T (bin' y x') (quad' l cdp zero (rL' :/: rR'))
 \end{code}
-\caption{The function \texttt{merge} without middle element}
-\label{merge}
+\caption{\label{merge} \small The function \texttt{merge} without middle element}
 \end{figure}
 
 \subsection{Oracle and unsafePerformIO}
+% TODO: Clarify that the bool corresponds to leftOf and rightOf of SomeTri
+% matrix
 \label{oraclesection}
 The use of an oracle as described by \citet{parparsepaper} presented a bit
 of a problem in implementing a monoid instance for the parser, for the simple
@@ -1325,19 +1376,22 @@ without it being always \texttt{True} or always \texttt{False}. The call to
 instance Monoid (SomeTri a) where
     t0 `mappend` t1 = merge True t0 t1
 \end{code}
-\caption{First attempt at parser Monoid instance before random oracle.}
+\caption{\small First attempt at parser Monoid instance before random oracle.
+\texttt{True} in this case means that the left matrix will always be chosen,
+leading to linear behaviour, exactly the opposite of what we want to achieve.}
 \end{figure}
 
 The call to \texttt{merge} requires a \texttt{Bool} acting as the oracle as an
-argument. Because a Monoid has no context outside its own type, it is hard, if not
-impossible, to generate a \texttt{Bool} using only the \texttt{SomeTri} type.
-One could argue for creating a newtype wrapper around a tuple of
-\texttt{SomeTri} and \texttt{StdGen}, used to generate the \texttt{Bool} at each
-step, but that only moves the problem to the \texttt{mempty}
-call, where a fresh \texttt{StdGen} would have to be picked at each instance.
+argument, to choose the left or right matrix. Because a Monoid has no context
+outside its own type, it is hard, if not impossible, to generate a \texttt{Bool}
+using only the \texttt{SomeTri} type.  One could argue for creating a newtype
+wrapper around a tuple of \texttt{SomeTri} and \texttt{StdGen}, used to generate
+the \texttt{Bool} at each step, but that only moves the problem to the
+\texttt{mempty} call, where a fresh \texttt{StdGen} would have to be picked at
+each instance.
 
 The solution to this problem came in the form of a call to
-\texttt{unsafePerformIO}.  Not only is this is controversial, it was also not
+\texttt{unsafePerformIO}. Not only is this controversial, it was also not
 completely obvious to implement. If an unsafe call to \texttt{randomIO} was made
 separately from the merge call, this call would be evaluated only once,
 rendering the solution useless. The trick here was to put the whole call inside
@@ -1351,7 +1405,7 @@ instance Monoid (SomeTri a) where
       b <- randomIO
       return $ merge b t0 t1
 \end{code}
-\caption{Parser \texttt{Monoid} instance with oracle}
+\caption{\small Parser \texttt{Monoid} instance with oracle}
 \end{figure}
 
 Now usually, for \texttt{unsafePerformIO} to be safe one should make sure that
@@ -1413,11 +1467,11 @@ of tokens are more common, the parser could save memory if some sharing was done
 there as well.
 
 \section{Testing}
-To test this parser algorithm was made rather easy, since a parser conforming to
+To test this parser algorithm was rather easy, since a parser conforming to
 the algorithm could be generated by from a LBNF grammar using BNFC. The main
 testing language was Javalette Light, a small subset of C, but still with the
 ability to create interesting parse trees. Later, both the Javalette language
-and C was used to test the parser. When testing with C a serious bug was
+and C were used to test the parser. When testing with C a serious bug was
 discovered, this is discussed in \ref{branchbug}.
 
 Testing was not automated, but instead simple input files were used, where the
@@ -1466,13 +1520,13 @@ therefore satisfy these conditions.
 
 \subsection{Merging matrices}
 The core of the parser is the merging of matrices corresponding to previously
-parsed subtrees. The merge process utilises the $V$ function and does matrix 
-multiplication, so it should depend heavily on the input size. Tests designed to
-measure this behaviour were inconclusive due to technical limitations in memory,
-but for the small files we were able to test, the behaviour was similar to that
-of the total running time. Such a behaviour can be expected, because all parsing
-work is done in \texttt{merge}, and the number of calls to \texttt{merge} is
-linear in the input size. 
+parsed subtrees. The merge process uses the $V$ function from Valiant's
+algorithm, and does matrix multiplication, so it should depend heavily on the
+input size. Tests designed to measure this behaviour were inconclusive due to
+technical limitations in memory, but for the small files we were able to test,
+the behaviour was similar to that of the total running time. Such a behaviour
+can be expected, because all parsing work is done in \texttt{merge}, and the
+number of calls to \texttt{merge} is linear in the input size. 
 
 \subsection{Total running time}
 From stress testing the parser with large inputs, it seems that the parser
@@ -1482,7 +1536,7 @@ below 1000 and upwards.
 
 \begin{figure}[H]
 \includegraphics[width=\textwidth]{criterion-1-128.eps}
-\caption{\label{criterion}Mean running time for files where the input size denote the
+\caption{\label{criterion} \small Mean running time for files where the input size denote the
 number of functions (of equal size) in that file. The green regression line
 shows that the parser more or less behaves linearly with respect to input size.}
 \end{figure}
@@ -1512,10 +1566,10 @@ grammar without ambiguities, this should not be possible on the top-level.
 The problem turned out to be a bug in \texttt{merge}, in the subroutine taking
 care of the row that was chopped (see \ref{chopsection}). Initially,
 \texttt{merge} was written so that the chopped off row was included as a part of
-the upper-right matrix as an argument to the V function. This led that row to be
-combined with itself, because that row had already been computed using the V
-function. The solution was to remove all but the first element, so that nothing
-would be recomputed.
+the upper-right matrix as an argument to the V function from Valiant's
+algorithm. This led that row to be combined with itself, because that row had
+already been computed using the V function. The solution was to remove all but
+the first element, so that nothing would be recomputed.
 
 \subsection{Loosen constraint on Matrix type}
 When writing \texttt{merge}, one attempt was made at loosening the constraints
@@ -1546,10 +1600,10 @@ parser, much due to the fact that it is missing in the lexer. Discussions with
 The most likely way to implement position information would be by using relative
 positions for tokens, because of the tree structure where nodes are not aware of
 each other. That way, position information, or lexical errors, can be promoted
-using mappend. There are, however, several ways to integrate the relative
-positions into the structure, but the most obvious would be to create a newtype
-wrapper for tuples where the lexer state and position information are dependent
-on each other, as opposed to the monoid instance for regular tuples. 
+using \texttt{mappend}. There are, however, several ways to integrate the
+relative positions into the structure, but the most obvious would be to create a
+newtype wrapper for tuples where the lexer state and position information are
+dependent on each other, as opposed to the monoid instance for regular tuples. 
 
 \subsection{Error information}
 Related to the issue of position information, the error reporting in the lexer
@@ -1585,8 +1639,8 @@ small results that lack structural \textit{glue}, as shown in figure
        \mrk 4 {$j$};
        \mrk 5 {$k$};
      \end{tikzpicture}
-     \caption{\label{missingglue}Example chart where the tokens from j to k
-     cannot be parsed, and therefore $C$ and $Z$ coulde be given as parse
+     \caption{\label{missingglue} \small Example chart where the tokens from j to k
+     cannot be parsed, and therefore $C$ and $Z$ could be given as parse
      results.}
   \end{subfigure}
   \begin{subfigure}[H]{.1\textwidth}
@@ -1603,7 +1657,7 @@ small results that lack structural \textit{glue}, as shown in figure
       \mrk 2 {$j$};
       \mrk 8 {$k$};
     \end{tikzpicture}
-    \caption{\label{parseoverlap} Example chart where $A$ and $B$ overlap. Here one
+    \caption{\label{parseoverlap} \small Example chart where $A$ and $B$ overlap. Here one
     has to decide on how to proceed if there is no rule that can parse from j to
     k.}
   \end{subfigure}
