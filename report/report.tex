@@ -193,7 +193,8 @@ text editors give syntax feedback based on regular expressions, which does not
 yield any information about, for example, nesting or the surrounding AST. A
 fast incremental parser, can also be connected to a type checker to get even
 more information, possibly in real-time, while not having to recompile the whole
-file to get such information, but that is beyond the scope of this thesis.
+file to get such information, but any real world use cases are beyond the scope
+of this thesis.
 
 \section{Lexing}
 In compilers, a \textit{lexer} reads input source code and groups the characters
@@ -1494,7 +1495,8 @@ clocked at 3.40 GHz, with a sample size of 1000.
 The benchmarks were carried out in such a way that lexing was done prior to
 measurement of parser measurement, so that lexer performance would not affect
 measurement of parser performance. The complete bechmark code can be found in
-the repository under \texttt{src/Test/Javalette/BenchParser.hs} \cite{jyp-bnfc}.
+the project repository under \path{src/Test/Javalette/BenchParser.hs}
+\cite{tobsan-repo}.
 
 It should be noted that testing large inputs for this project has been hard due
 to large memory consumption, possibly owing to the structure of the lexer. An
